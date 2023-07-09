@@ -87,7 +87,11 @@ import static java.lang.Math.min;
 import static org.apache.flink.client.cli.CliFrontendParser.HELP_OPTION;
 import static org.apache.flink.util.Preconditions.checkNotNull;
 
-/** Implementation of a simple command line frontend for executing programs. */
+/**
+ * Implementation of a simple command line frontend for executing programs.
+ * 
+ * Flink 提交任务的入口类
+ */
 public class CliFrontend {
 
     private static final Logger LOG = LoggerFactory.getLogger(CliFrontend.class);
@@ -220,7 +224,9 @@ public class CliFrontend {
     protected void run(String[] args) throws Exception {
         LOG.info("Running 'run' command.");
 
+        // 获取默认的执行参数
         final Options commandOptions = CliFrontendParser.getRunCommandOptions();
+        // 解析参数
         final CommandLine commandLine = getCommandLine(commandOptions, args, true);
 
         // evaluate help flag
@@ -229,6 +235,7 @@ public class CliFrontend {
             return;
         }
 
+        // 校验并选择可用的客户端
         final CustomCommandLine activeCommandLine =
                 validateAndGetActiveCommandLine(checkNotNull(commandLine));
 
@@ -236,6 +243,7 @@ public class CliFrontend {
 
         final List<URL> jobJars = getJobJarAndDependencies(programOptions);
 
+        // 获取有效配置
         final Configuration effectiveConfiguration =
                 getEffectiveConfiguration(activeCommandLine, commandLine, programOptions, jobJars);
 
@@ -715,6 +723,7 @@ public class CliFrontend {
             throws CliArgsException {
         final Options commandLineOptions =
                 CliFrontendParser.mergeOptions(commandOptions, customCommandLineOptions);
+        // 解析命令参数的核心方法
         return CliFrontendParser.parse(commandLineOptions, args, stopAtNonOptions);
     }
 
@@ -1083,6 +1092,7 @@ public class CliFrontend {
         }
 
         // get action
+        // 获取执行行为
         String action = args[0];
 
         // remove action from parameters
@@ -1092,6 +1102,7 @@ public class CliFrontend {
             // do action
             switch (action) {
                 case ACTION_RUN:
+                    // 运行作业
                     run(params);
                     return 0;
                 case ACTION_RUN_APPLICATION:
@@ -1172,6 +1183,7 @@ public class CliFrontend {
                 GlobalConfiguration.loadConfiguration(configurationDirectory);
 
         // 3. load the custom command lines
+        // 加载自定义命令行(客户端)
         final List<CustomCommandLine> customCommandLines =
                 loadCustomCommandLines(configuration, configurationDirectory);
 
@@ -1186,6 +1198,7 @@ public class CliFrontend {
             Configuration securityConfig = new Configuration(cli.configuration);
             DynamicPropertiesUtil.encodeDynamicProperties(commandLine, securityConfig);
             SecurityUtils.install(new SecurityConfiguration(securityConfig));
+            // 解析并运行命令
             retCode = SecurityUtils.getInstalledContext().runSecured(() -> cli.parseAndRun(args));
         } catch (Throwable t) {
             final Throwable strippedThrowable =
@@ -1244,12 +1257,14 @@ public class CliFrontend {
     public static List<CustomCommandLine> loadCustomCommandLines(
             Configuration configuration, String configurationDirectory) {
         List<CustomCommandLine> customCommandLines = new ArrayList<>();
+        // 添加 Generic 命令行客户端
         customCommandLines.add(new GenericCLI(configuration, configurationDirectory));
 
         //	Command line interface of the YARN session, with a special initialization here
         //	to prefix all options with y/yarn.
         final String flinkYarnSessionCLI = "org.apache.flink.yarn.cli.FlinkYarnSessionCli";
         try {
+            // 添加 Yarn 命令行客户端
             customCommandLines.add(
                     loadCustomCommandLine(
                             flinkYarnSessionCLI,
@@ -1261,6 +1276,7 @@ public class CliFrontend {
             final String errorYarnSessionCLI = "org.apache.flink.yarn.cli.FallbackYarnSessionCli";
             try {
                 LOG.info("Loading FallbackYarnSessionCli");
+                // 添加 Default 命令行客户端
                 customCommandLines.add(loadCustomCommandLine(errorYarnSessionCLI, configuration));
             } catch (Exception exception) {
                 LOG.warn("Could not load CLI class {}.", flinkYarnSessionCLI, e);
@@ -1290,6 +1306,7 @@ public class CliFrontend {
         for (CustomCommandLine cli : customCommandLines) {
             LOG.debug(
                     "Checking custom commandline {}, isActive: {}", cli, cli.isActive(commandLine));
+            // 按 customCommandLines 中的保存顺序选择活跃的客户端
             if (cli.isActive(commandLine)) {
                 return cli;
             }

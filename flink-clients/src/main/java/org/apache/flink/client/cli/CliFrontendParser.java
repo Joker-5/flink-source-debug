@@ -42,6 +42,7 @@ import java.util.stream.Collectors;
  */
 public class CliFrontendParser {
 
+    // 选项列表
     static final Option HELP_OPTION =
             new Option(
                     "h",

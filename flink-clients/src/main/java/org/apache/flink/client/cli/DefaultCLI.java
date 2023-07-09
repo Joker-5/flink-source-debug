@@ -47,6 +47,7 @@ public class DefaultCLI extends AbstractCustomCommandLine {
                             + "Attention: This option is respected only if the high-availability configuration is NONE.");
 
     @Override
+    // 默认命令行客户端，总是可用
     public boolean isActive(CommandLine commandLine) {
         // always active because we can try to read a JobManager address from the config
         return true;

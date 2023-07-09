@@ -53,15 +53,19 @@ abstract class AbstractYarnCli extends AbstractCustomCommandLine {
     @Override
     public boolean isActive(CommandLine commandLine) {
         final String jobManagerOption = commandLine.getOptionValue(addressOption.getOpt(), null);
+        // 是否指定为 per-job 模式，即指定 -m yarn-cluster，ID = yarn-cluster
         final boolean yarnJobManager = ID.equals(jobManagerOption);
+        // 是否存在 Flink 在 yarn 的 appID，即 yarn-session 模式是否启动
         final boolean hasYarnAppId =
                 commandLine.hasOption(applicationId.getOpt())
                         || configuration.getOptional(YarnConfigOptions.APPLICATION_ID).isPresent();
+        // executor 的名字是否为 yarn-session 或 yarn-per-job
         final boolean hasYarnExecutor =
                 YarnSessionClusterExecutor.NAME.equalsIgnoreCase(
                                 configuration.get(DeploymentOptions.TARGET))
                         || YarnJobClusterExecutor.NAME.equalsIgnoreCase(
                                 configuration.get(DeploymentOptions.TARGET));
+        // 只要满足上面 3 项中的 1 项即返回 True
         return hasYarnExecutor || yarnJobManager || hasYarnAppId;
     }
 

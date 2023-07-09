@@ -370,6 +370,7 @@ public class FlinkYarnSessionCli extends AbstractYarnCli {
     }
 
     @Override
+    // 判断 Yarn 客户端是否可用
     public boolean isActive(CommandLine commandLine) {
         if (!super.isActive(commandLine)) {
             return (isYarnPropertiesFileMode(commandLine)
