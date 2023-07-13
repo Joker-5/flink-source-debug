@@ -243,9 +243,11 @@ public class KafkaPartitionSplitReader
 
     // ---------------
 
+    // Checkpoint 完成后， Task 会调用该方法
     public void notifyCheckpointComplete(
             Map<TopicPartition, OffsetAndMetadata> offsetsToCommit,
             OffsetCommitCallback offsetCommitCallback) {
+        // 将 offset 手动提交到 Kafka
         consumer.commitAsync(offsetsToCommit, offsetCommitCallback);
     }
 

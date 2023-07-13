@@ -22,10 +22,14 @@ import org.apache.flink.streaming.connectors.kafka.internals.KafkaTopicPartition
 
 /** Startup modes for the Kafka Consumer. */
 @Internal
+// Flink 从 Kafka Source 消费 offset 的模式，
+// 每个枚举值都是一个 long 型的负数，根据不同的模式，在每个 partition 初始化的时候会默认将 offset 设置为这个负数
 public enum StartupMode {
 
     /**
      * Start from committed offsets in ZK / Kafka brokers of a specific consumer group (default).
+     * 
+     * 默认模式，表示根据上一次 group id 提交的 offset 位置开始消费
      */
     GROUP_OFFSETS(KafkaTopicPartitionStateSentinel.GROUP_OFFSET),
 

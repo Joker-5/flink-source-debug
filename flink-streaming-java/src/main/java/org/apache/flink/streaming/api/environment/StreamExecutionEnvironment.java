@@ -1955,6 +1955,7 @@ public class StreamExecutionEnvironment implements AutoCloseable {
 
         clean(function);
 
+        // 创建 StreamSource 对象，构造器参数中的 function 就是传入的 Source 对象，比如 FlinkKafkaConsumer
         final StreamSource<OUT, ?> sourceOperator = new StreamSource<>(function);
         return new DataStreamSource<>(
                 this, resolvedTypeInfo, sourceOperator, isParallel, sourceName, boundedness);

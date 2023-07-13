@@ -130,6 +130,7 @@ public abstract class FlinkKafkaConsumerBase<T> extends RichParallelSourceFuncti
      * The set of topic partitions that the source will read, with their initial offsets to start
      * reading from.
      */
+    // 保存订阅 Topic 的所有 partition 以及初始消费的 offset
     private Map<KafkaTopicPartition, Long> subscribedPartitionsToStartOffsets;
 
     /**
@@ -195,9 +196,12 @@ public abstract class FlinkKafkaConsumerBase<T> extends RichParallelSourceFuncti
      * <p>Using a sorted map as the ordering is important when using restored state to seed the
      * partition discoverer.
      */
+    // 如果指定了恢复的 checkpoint 路径，启动时候将会读取 restoredState 变量里面的内容来获取起始 offset，
+    // 而不再是使用 StartupMode 中的枚举值作为初始的 offset
     private transient volatile TreeMap<KafkaTopicPartition, Long> restoredState;
 
     /** Accessor for state in the operator state backend. */
+    // 保存了 checkpoint 要持久化存储的内容，例如每个 partition 已经消费的 offset 等信息
     private transient ListState<Tuple2<KafkaTopicPartition, Long>> unionOffsetStates;
 
     /** Discovery loop, executed in a separate thread. */
@@ -268,6 +272,7 @@ public abstract class FlinkKafkaConsumerBase<T> extends RichParallelSourceFuncti
      */
     protected static void adjustAutoCommitConfig(
             Properties properties, OffsetCommitMode offsetCommitMode) {
+        // 确保在 Flink 开启 Checkpoint 时，关闭 Kafka 消费 offset 自动提交的配置
         if (offsetCommitMode == OffsetCommitMode.ON_CHECKPOINTS
                 || offsetCommitMode == OffsetCommitMode.DISABLED) {
             properties.setProperty(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "false");
@@ -677,6 +682,8 @@ public abstract class FlinkKafkaConsumerBase<T> extends RichParallelSourceFuncti
 
                     break;
                 default:
+                    // 将所有 partition 的起始 offset 初始化为 StartupMode 中的指定值，
+                    // 比如 -915623761773L 这个值就表示了当前为 GROUP_OFFSETS 模式。
                     for (KafkaTopicPartition seedPartition : allPartitions) {
                         subscribedPartitionsToStartOffsets.put(
                                 seedPartition, startupMode.getStateSentinel());
@@ -754,6 +761,7 @@ public abstract class FlinkKafkaConsumerBase<T> extends RichParallelSourceFuncti
     }
 
     @Override
+    // FlinkKafkaConsumer 中的 run 方法的具体实现
     public void run(SourceContext<T> sourceContext) throws Exception {
         if (subscribedPartitionsToStartOffsets == null) {
             throw new Exception("The partitions were not set for the consumer");
@@ -802,6 +810,7 @@ public abstract class FlinkKafkaConsumerBase<T> extends RichParallelSourceFuncti
         //     instead of being built from `subscribedPartitionsToStartOffsets`
         //   - 'notifyCheckpointComplete' will start to do work (i.e. commit offsets to
         //     Kafka through the fetcher, if configured to do so)
+        // 创建一个 Fetcher 对象，
         this.kafkaFetcher =
                 createFetcher(
                         sourceContext,
@@ -823,6 +832,7 @@ public abstract class FlinkKafkaConsumerBase<T> extends RichParallelSourceFuncti
         //  2) Old state - partition discovery is disabled and only the main fetcher loop is
         // executed
         if (discoveryIntervalMillis == PARTITION_DISCOVERY_DISABLED) {
+            // 拉取 Kafka 消息
             kafkaFetcher.runFetchLoop();
         } else {
             runWithPartitionDiscovery();
@@ -1011,6 +1021,7 @@ public abstract class FlinkKafkaConsumerBase<T> extends RichParallelSourceFuncti
         if (!running) {
             LOG.debug("snapshotState() called on closed source");
         } else {
+            // 清空状态，这是一个算子状态
             unionOffsetStates.clear();
 
             final AbstractFetcher<?, ?> fetcher = this.kafkaFetcher;
@@ -1039,11 +1050,13 @@ public abstract class FlinkKafkaConsumerBase<T> extends RichParallelSourceFuncti
                     // can happen
                     // on this function at a time: either snapshotState() or
                     // notifyCheckpointComplete()
+                    // 保存要提交的 offset
                     pendingOffsetsToCommit.put(context.getCheckpointId(), currentOffsets);
                 }
 
                 for (Map.Entry<KafkaTopicPartition, Long> kafkaTopicPartitionLongEntry :
                         currentOffsets.entrySet()) {
+                    // 在状态中保存 offset
                     unionOffsetStates.add(
                             Tuple2.of(
                                     kafkaTopicPartitionLongEntry.getKey(),

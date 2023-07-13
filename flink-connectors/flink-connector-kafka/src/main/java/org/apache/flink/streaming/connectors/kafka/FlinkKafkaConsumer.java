@@ -249,8 +249,10 @@ public class FlinkKafkaConsumer<T> extends FlinkKafkaConsumerBase<T> {
 
         // make sure that auto commit is disabled when our offset commit mode is ON_CHECKPOINTS;
         // this overwrites whatever setting the user configured in the properties
+        // 调整 Kafka 自动提交 offset 配置
         adjustAutoCommitConfig(properties, offsetCommitMode);
 
+        // 创建一个 KafkaFetcher 对象
         return new KafkaFetcher<>(
                 sourceContext,
                 assignedPartitionsWithInitialOffsets,

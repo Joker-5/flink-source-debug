@@ -64,6 +64,7 @@ public class SourceStreamTask<
                 OUT, SRC extends SourceFunction<OUT>, OP extends StreamSource<OUT, SRC>>
         extends StreamTask<OUT, OP> {
 
+    // Source 线程
     private final LegacySourceFunctionThread sourceThread;
     private final Object lock;
 
@@ -188,6 +189,7 @@ public class SourceStreamTask<
         // not in steps).
         sourceThread.setTaskDescription(getName());
 
+        // 启动 Source 线程
         sourceThread.start();
 
         sourceThread
@@ -330,6 +332,7 @@ public class SourceStreamTask<
                     LOG.debug(
                             "Legacy source {} skip execution since the task is finished on restore",
                             getTaskNameWithSubtaskAndId());
+                    // 线程执行主逻辑，在该方法中会其中线程执行任务，即 userFunction.run(ctx); 语句
                     mainOperator.run(lock, operatorChain);
                 }
                 completeProcessing();

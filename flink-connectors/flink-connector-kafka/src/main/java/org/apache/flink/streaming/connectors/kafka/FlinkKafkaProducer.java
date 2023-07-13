@@ -112,6 +112,7 @@ public class FlinkKafkaProducer<IN>
      * <li>{@link #AT_LEAST_ONCE}
      * <li>{@link #NONE}
      */
+    // Kafka sink 语意
     public enum Semantic {
 
         /**
@@ -144,6 +145,8 @@ public class FlinkKafkaProducer<IN>
          * Semantic.NONE means that nothing will be guaranteed. Messages can be lost and/or
          * duplicated in case of failure.
          */
+        // 不会做任何额外的操作，完全依靠 kafka producer 自身的特性，
+        // 向 Kafka 中发送数据之后，Flink 不会再考虑其是否已经正确的收到数据。
         NONE
     }
 

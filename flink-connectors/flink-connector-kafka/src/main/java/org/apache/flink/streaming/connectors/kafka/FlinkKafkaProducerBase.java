@@ -296,6 +296,7 @@ public abstract class FlinkKafkaProducerBase<IN> extends RichSinkFunction<IN>
      * @param next The incoming data
      */
     @Override
+    // 向下游 Kafka 发送数据
     public void invoke(IN next, Context context) throws Exception {
         // propagate asynchronous errors
         checkErroneous();

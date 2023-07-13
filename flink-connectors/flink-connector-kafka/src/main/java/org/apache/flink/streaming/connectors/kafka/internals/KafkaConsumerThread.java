@@ -165,6 +165,8 @@ public class KafkaConsumerThread<T> extends Thread {
         // This is important, because the consumer has multi-threading issues,
         // including concurrent 'close()' calls.
         try {
+            // 创建 KafkaConsumer，因为 KafkaConsumer 并不是线程安全的，
+            // 因此每个 KafkaConsumerThread 线程都需要生成独立的 KafkaConsumer 对象
             this.consumer = getConsumer(kafkaProperties);
         } catch (Throwable t) {
             handover.reportError(t);
@@ -259,6 +261,7 @@ public class KafkaConsumerThread<T> extends Thread {
                 // over
                 if (records == null) {
                     try {
+                        // 从 Kafka 拉取消息的关键语句
                         records = consumer.poll(Duration.ofMillis(pollTimeout));
                     } catch (WakeupException we) {
                         continue;
@@ -441,14 +444,20 @@ public class KafkaConsumerThread<T> extends Thread {
                             Collections.singletonList(newPartitionState.getKafkaPartitionHandle()));
                     newPartitionState.setOffset(
                             consumerTmp.position(newPartitionState.getKafkaPartitionHandle()) - 1);
+                // StartupMode 为 GROUP_OFFSETS 模式，在第一次消费前会走下面这个分支（因为 offset 还是初始赋值的负数偏移量 -915623761773L），
+                // 这种情况由于读取不到上次 checkpoint 的结果，所以依旧是依靠 kafka 自身的机制，即根据 __consumer_offsets 记录的内容消费。 
                 } else if (newPartitionState.getOffset()
                         == KafkaTopicPartitionStateSentinel.GROUP_OFFSET) {
                     // the KafkaConsumer by default will automatically seek the consumer position
                     // to the committed group offset, so we do not need to do it.
 
+                    // 在 state 中需要存储的是成功消费的最后一条消息的 offset，但通过 position 方法返回的是下一次应该消费的起始 offset（也就是 Kafka 中 LEO 的语意），
+                    // 因此调用 position 方法需要将 idx - 1，下面方法调用的目的就是为了在 checkpoint 时能够拿到正确的 offset
                     newPartitionState.setOffset(
                             consumerTmp.position(newPartitionState.getKafkaPartitionHandle()) - 1);
                 } else {
+                    // 已经消费到了消息，这里 offset + 1 的原理同上，
+                    // state 保存的是最后一次成功消费数据的 offset，所以加1才是现在需要开始消费的 offset。
                     consumerTmp.seek(
                             newPartitionState.getKafkaPartitionHandle(),
                             newPartitionState.getOffset() + 1);

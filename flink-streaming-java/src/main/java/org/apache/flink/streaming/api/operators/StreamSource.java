@@ -46,6 +46,7 @@ public class StreamSource<OUT, SRC extends SourceFunction<OUT>>
     private transient volatile boolean canceledOrStopped = false;
 
     public StreamSource(SRC sourceFunction, boolean emitProgressiveWatermarks) {
+        // 将 sourceFunction 传给父类 AbstractUdfStreamOperator
         super(sourceFunction);
 
         this.chainingStrategy = ChainingStrategy.HEAD;
@@ -96,6 +97,7 @@ public class StreamSource<OUT, SRC extends SourceFunction<OUT>>
         final long watermarkInterval =
                 getRuntimeContext().getExecutionConfig().getAutoWatermarkInterval();
 
+        // 设置 Source context
         this.ctx =
                 StreamSourceContexts.getSourceContext(
                         timeCharacteristic,
@@ -107,6 +109,8 @@ public class StreamSource<OUT, SRC extends SourceFunction<OUT>>
                         emitProgressiveWatermarks);
 
         try {
+            // 运行 source 主线程，根据传入的 userFunction 决定线程执行逻辑，
+            // 比如在 addSource 时传入的是 FlinkKafkaConsumer 对象，那么此处就会调用 FlinkKafkaConsumer 中的 run 方法
             userFunction.run(ctx);
         } finally {
             if (latencyEmitter != null) {

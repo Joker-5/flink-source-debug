@@ -125,6 +125,7 @@ public class KafkaFetcher<T> extends AbstractFetcher<T, TopicPartition> {
     public void runFetchLoop() throws Exception {
         try {
             // kick off the actual Kafka consumer
+            // 启动一个 KafkaConsumerThread 消费线程
             consumerThread.start();
 
             while (running) {

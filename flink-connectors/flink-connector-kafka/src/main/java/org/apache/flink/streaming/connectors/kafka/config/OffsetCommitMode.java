@@ -26,17 +26,21 @@ import org.apache.flink.annotation.Internal;
  * <p>The exact value of this is determined at runtime in the consumer subtasks.
  */
 @Internal
+// Flink 消费 Kafka 数据，提交 offset 的 3 种方式
 public enum OffsetCommitMode {
 
     /** Completely disable offset committing. */
+    // 不提交 offset
     DISABLED,
 
     /** Commit offsets back to Kafka only when checkpoints are completed. */
+    // 完成 Checkpoint 后提交 offset
     ON_CHECKPOINTS,
 
     /**
      * Commit offsets periodically back to Kafka, using the auto commit functionality of internal
      * Kafka clients.
      */
+    // 依赖 Kafka 自动提交机制提交 offset
     KAFKA_PERIODIC;
 }

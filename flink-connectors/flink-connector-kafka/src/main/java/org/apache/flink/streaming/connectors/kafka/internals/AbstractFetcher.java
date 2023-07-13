@@ -88,6 +88,8 @@ public abstract class AbstractFetcher<T, KPH> {
     protected final Object checkpointLock;
 
     /** All partitions (and their state) that this fetcher is subscribed to. */
+    // 保存所有订阅的 partition 的 offset 等详细信息，
+    // 在 checkpoint 的时候，保存的 offset 等信息都是来自于这个变量
     private final List<KafkaTopicPartitionState<T, KPH>> subscribedPartitionStates;
 
     /**
@@ -173,6 +175,7 @@ public abstract class AbstractFetcher<T, KPH> {
         this.unassignedPartitionsQueue = new ClosableBlockingQueue<>();
 
         // initialize subscribed partition states with seed partitions
+        // 初始化 subscribedPartitionStates
         this.subscribedPartitionStates =
                 createPartitionStateHolders(
                         seedPartitionsWithInitialOffsets,
