@@ -46,6 +46,8 @@ import static java.util.Objects.requireNonNull;
  * @param <F> The type of the user function
  */
 @PublicEvolving
+// 封装一个 Function，真正的操作逻辑在 Function 中实现，AbstractUdfStreamOperator 在各种基础方法的实现上会相应调用对应 Function 的实现，
+// 比如 open、close 方法都会调用 Function 中的对应实现
 public abstract class AbstractUdfStreamOperator<OUT, F extends Function>
         extends AbstractStreamOperator<OUT>
         implements OutputTypeConfigurable<OUT>, UserFunctionProvider<F> {

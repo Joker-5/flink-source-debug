@@ -27,4 +27,5 @@ import org.apache.flink.annotation.Public;
  * method) interfaces that can be implemented via Java 8 lambdas.
  */
 @Public
+// Function 是 Transformation 的最底层封装，用户的真正处理逻辑都是在 Function 中实现的，比如 FlatMapFunction
 public interface Function extends java.io.Serializable {}

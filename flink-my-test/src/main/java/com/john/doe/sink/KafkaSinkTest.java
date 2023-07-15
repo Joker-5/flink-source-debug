@@ -1,4 +1,4 @@
-package com.john.doe.source;
+package com.john.doe.sink;
 
 import org.apache.flink.api.common.serialization.SimpleStringSchema;
 import org.apache.flink.streaming.api.datastream.DataStreamSource;

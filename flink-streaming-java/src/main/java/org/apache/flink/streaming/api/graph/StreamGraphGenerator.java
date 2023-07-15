@@ -308,6 +308,7 @@ public class StreamGraphGenerator {
         this.savepointRestoreSettings = savepointRestoreSettings;
     }
 
+    // 生成 StreamGraph
     public StreamGraph generate() {
         streamGraph = new StreamGraph(executionConfig, checkpointConfig, savepointRestoreSettings);
         shouldExecuteInBatchMode = shouldExecuteInBatchMode();
@@ -315,6 +316,7 @@ public class StreamGraphGenerator {
 
         alreadyTransformed = new IdentityHashMap<>();
 
+        // 自底向上（从 input transformation 开始）对树上每个 transformation 进行转换
         for (Transformation<?> transformation : transformations) {
             transform(transformation);
         }
@@ -522,13 +524,17 @@ public class StreamGraphGenerator {
      * <p>This checks whether we already transformed it and exits early in that case. If not it
      * delegates to one of the transformation specific methods.
      */
+    // 将 Transformation 转换为 StreamGraph 中的 StreamNode 和 StreamEdge，
+    // 并将该 Transformation 的 id 作为列表返回，通常只有一个 id，FeedbackTransformation 除外
     private Collection<Integer> transform(Transformation<?> transform) {
+        // 将已经完成 transform 的 Transformation 放入 alreadyTransformed Map 中
         if (alreadyTransformed.containsKey(transform)) {
             return alreadyTransformed.get(transform);
         }
 
         LOG.debug("Transforming " + transform);
 
+        // 未设置 MaxParallelism，使用 flink job 的 MaxParallelism 进行设置 
         if (transform.getMaxParallelism() <= 0) {
 
             // if the max parallelism hasn't been set, then first use the job wide max parallelism
@@ -567,14 +573,18 @@ public class StreamGraphGenerator {
                         });
 
         // call at least once to trigger exceptions about MissingTypeInfo
+        // 如果是 MissingTypeInfo 类型，说明其类型不确定，则抛出异常
         transform.getOutputType();
 
         @SuppressWarnings("unchecked")
+        // 从 translatorMap 中获取类型对应的 TransformationTranslator，进行转换
+        // translatorMap 中的具体值在 static 块中初始化
         final TransformationTranslator<?, Transformation<?>> translator =
                 (TransformationTranslator<?, Transformation<?>>)
                         translatorMap.get(transform.getClass());
 
         Collection<Integer> transformedIds;
+        // 执行转换操作
         if (translator != null) {
             transformedIds = translate(translator, transform);
         } else {
@@ -825,6 +835,7 @@ public class StreamGraphGenerator {
         checkNotNull(translator);
         checkNotNull(transform);
 
+        // 递归调用，只有 input 的 Transformation 处理完后才能处理后面
         final List<Collection<Integer>> allInputIds = getParentInputIds(transform.getInputs());
 
         // the recursive call might have already transformed this
@@ -832,6 +843,7 @@ public class StreamGraphGenerator {
             return alreadyTransformed.get(transform);
         }
 
+        // 获取 share group
         final String slotSharingGroup =
                 determineSlotSharingGroup(
                         transform.getSlotSharingGroup().isPresent()
@@ -844,9 +856,10 @@ public class StreamGraphGenerator {
         final TransformationTranslator.Context context =
                 new ContextImpl(this, streamGraph, slotSharingGroup, configuration);
 
+        // 根据 job 运行模式进行不同的处理
         return shouldExecuteInBatchMode
-                ? translator.translateForBatch(transform, context)
-                : translator.translateForStreaming(transform, context);
+                ? translator.translateForBatch(transform, context) // 批处理
+                : translator.translateForStreaming(transform, context); // 流处理
     }
 
     /**

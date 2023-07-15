@@ -34,6 +34,7 @@ import org.apache.flink.streaming.runtime.watermarkstatus.WatermarkStatus;
  * @param <OUT> The output type of the operator
  */
 @PublicEvolving
+// 如果 Operator 是一个二元操作符，也就是对两个流的处理，例如双流 join，可以选择实现 TwoInputStreamOperator 接口
 public interface TwoInputStreamOperator<IN1, IN2, OUT> extends StreamOperator<OUT> {
 
     /**

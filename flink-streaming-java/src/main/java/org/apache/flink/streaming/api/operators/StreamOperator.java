@@ -43,6 +43,7 @@ import java.io.Serializable;
  * @param <OUT> The output type of the operator
  */
 @PublicEvolving
+// StreamOperator 是对 Function 的封装，真正的逻辑是在 Function 中实现的
 public interface StreamOperator<OUT> extends CheckpointListener, KeyContext, Serializable {
 
     // ------------------------------------------------------------------------

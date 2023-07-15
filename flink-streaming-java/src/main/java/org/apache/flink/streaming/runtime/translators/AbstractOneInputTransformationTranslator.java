@@ -61,6 +61,7 @@ abstract class AbstractOneInputTransformationTranslator<IN, OUT, OP extends Tran
         final int transformationId = transformation.getId();
         final ExecutionConfig executionConfig = streamGraph.getExecutionConfig();
 
+        // 添加一个 Operator，SteamGroup 端会添加一个 StreamNode
         streamGraph.addOperator(
                 transformationId,
                 slotSharingGroup,
@@ -90,6 +91,7 @@ abstract class AbstractOneInputTransformationTranslator<IN, OUT, OP extends Tran
                         + parentTransformations.size());
 
         for (Integer inputId : context.getStreamNodeIds(parentTransformations.get(0))) {
+            // 根据 inputId，给 node 在 graph 中添加相应 edge
             streamGraph.addEdge(inputId, transformationId, 0);
         }
 

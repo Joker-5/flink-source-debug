@@ -1939,6 +1939,7 @@ public class StreamExecutionEnvironment implements AutoCloseable {
         return addSource(function, sourceName, typeInfo, Boundedness.CONTINUOUS_UNBOUNDED);
     }
 
+    // 创建一个 DataStreamSource
     private <OUT> DataStreamSource<OUT> addSource(
             final SourceFunction<OUT> function,
             final String sourceName,
@@ -1948,6 +1949,7 @@ public class StreamExecutionEnvironment implements AutoCloseable {
         checkNotNull(sourceName);
         checkNotNull(boundedness);
 
+        // 获取相应的 TypeInformation
         TypeInformation<OUT> resolvedTypeInfo =
                 getTypeInfo(function, sourceName, SourceFunction.class, typeInfo);
 
@@ -1957,6 +1959,7 @@ public class StreamExecutionEnvironment implements AutoCloseable {
 
         // 创建 StreamSource 对象，构造器参数中的 function 就是传入的 Source 对象，比如 FlinkKafkaConsumer
         final StreamSource<OUT, ?> sourceOperator = new StreamSource<>(function);
+        // 其中还会创建一个 LegacySourceTransformation 对象
         return new DataStreamSource<>(
                 this, resolvedTypeInfo, sourceOperator, isParallel, sourceName, boundedness);
     }

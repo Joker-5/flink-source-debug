@@ -30,6 +30,7 @@ import org.apache.flink.streaming.runtime.streamrecord.StreamRecord;
  * @param <OUT> The output type of the operator
  */
 @PublicEvolving
+// 如果 Operator 只有一个输入，可以选择实现 OneInputStreamOperator 接口
 public interface OneInputStreamOperator<IN, OUT> extends StreamOperator<OUT>, Input<IN> {
     @Override
     default void setKeyContextElement(StreamRecord<IN> record) throws Exception {

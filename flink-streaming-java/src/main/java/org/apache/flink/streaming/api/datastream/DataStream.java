@@ -1194,9 +1194,10 @@ public class DataStream<T> {
         // read the output type of the input Transform to coax out errors about MissingTypeInfo
         transformation.getOutputType();
 
+        // 新的 transformation 会连接上当前 DataStream 中的 transformation，从而构建成一棵树
         OneInputTransformation<T, R> resultTransform =
                 new OneInputTransformation<>(
-                        this.transformation,
+                        this.transformation, // 记录这个 transformation 的输入 transformation
                         operatorName,
                         operatorFactory,
                         outTypeInfo,
@@ -1207,6 +1208,7 @@ public class DataStream<T> {
         SingleOutputStreamOperator<R> returnStream =
                 new SingleOutputStreamOperator(environment, resultTransform);
 
+        // 所有的 transformation 都会保存到 env 中
         getExecutionEnvironment().addOperator(resultTransform);
 
         return returnStream;

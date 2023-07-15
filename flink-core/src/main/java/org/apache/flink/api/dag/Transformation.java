@@ -104,6 +104,9 @@ import static org.apache.flink.util.Preconditions.checkNotNull;
  * @param <T> The type of the elements that result from this {@code Transformation}
  */
 @Internal
+// Transformation 是对 StreamOperator 的一个封装，并且会记录它前面的 Transformation，
+// 通过这种操作，可以将整个 Flink Job 的完整 graph 构建出来。
+// 所有对 DataStream 的操作，最终都是以 Transformation 体现的，DataStream 仅仅是暴露给用户的一套操作用 API，用于简化用户数据处理
 public abstract class Transformation<T> {
 
     // Has to be equal to StreamGraphGenerator.UPPER_BOUND_MAX_PARALLELISM
