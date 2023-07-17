@@ -27,6 +27,7 @@ import static org.apache.flink.util.Preconditions.checkNotNull;
  * intermediate result partition to a job vertex. An edge is parametrized with its {@link
  * DistributionPattern}.
  */
+// JobEdge 是 JobGraph 中的一条边（连接通道），这个边连接的是一个 IntermediateDataSet 和一个要消费的 JobVertex
 public class JobEdge implements java.io.Serializable {
 
     private static final long serialVersionUID = 1L;

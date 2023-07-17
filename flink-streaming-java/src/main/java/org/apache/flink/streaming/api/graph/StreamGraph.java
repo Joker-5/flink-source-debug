@@ -690,6 +690,9 @@ public class StreamGraph implements Pipeline {
 
         // If no partitioner was specified and the parallelism of upstream and downstream
         // operator matches use forward partitioning, use rebalance otherwise.
+        // 如果用户未指定 partitioner，且上下游 StreamNode 的并行度相同，
+        // 则选择 Forward 类型 Partitioner，
+        // 否则选择 RebalancePartitioner
         if (partitioner == null
                 && upstreamNode.getParallelism() == downstreamNode.getParallelism()) {
             partitioner =
@@ -1021,6 +1024,7 @@ public class StreamGraph implements Pipeline {
 
     /** Gets the assembled {@link JobGraph} with a specified {@link JobID}. */
     public JobGraph getJobGraph(ClassLoader userClassLoader, @Nullable JobID jobID) {
+        // 创建作业图 JobGraph
         return StreamingJobGraphGenerator.createJobGraph(userClassLoader, this, jobID);
     }
 

@@ -147,6 +147,7 @@ public class StreamGraphGenerator {
 
     public static final String DEFAULT_BATCH_JOB_NAME = "Flink Batch Job";
 
+    // 默认 SlotSharingGroup => default
     public static final String DEFAULT_SLOT_SHARING_GROUP = "default";
 
     private final List<Transformation<?>> transformations;
@@ -843,7 +844,7 @@ public class StreamGraphGenerator {
             return alreadyTransformed.get(transform);
         }
 
-        // 获取 share group
+        // 获取 SlotShareGroup
         final String slotSharingGroup =
                 determineSlotSharingGroup(
                         transform.getSlotSharingGroup().isPresent()
@@ -897,6 +898,7 @@ public class StreamGraphGenerator {
      * @param inputIds The IDs of the input operations.
      */
     private String determineSlotSharingGroup(String specifiedGroup, Collection<Integer> inputIds) {
+        // 如果用户指定了 SlotSharingGroup，则直接使用用户定义的
         if (specifiedGroup != null) {
             return specifiedGroup;
         } else {
@@ -905,6 +907,8 @@ public class StreamGraphGenerator {
                 String inputGroupCandidate = streamGraph.getSlotSharingGroup(id);
                 if (inputGroup == null) {
                     inputGroup = inputGroupCandidate;
+                    // 如果所有 input 的 SlotSharingGroup 都相同，则使用此 SlotSharingGroup，
+                    // 否则就使用默认的 SlotSharingGroup，DEFAULT_SLOT_SHARING_GROUP
                 } else if (!inputGroup.equals(inputGroupCandidate)) {
                     return DEFAULT_SLOT_SHARING_GROUP;
                 }

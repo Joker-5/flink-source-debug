@@ -39,7 +39,9 @@ public class NormalSourceTest {
                 .print();
 
         System.out.println(env.getStreamGraph().getStreamingPlanAsJSON());
-        
+        System.out.println(env.getStreamGraph().getJobGraph().toString());
+        System.out.println(env.getExecutionPlan());
+
         env.execute();
     }
 }

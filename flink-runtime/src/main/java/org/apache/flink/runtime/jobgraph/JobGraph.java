@@ -271,6 +271,7 @@ public class JobGraph implements Serializable {
      */
     public void setExecutionConfig(ExecutionConfig executionConfig) throws IOException {
         checkNotNull(executionConfig, "ExecutionConfig must not be null.");
+        // 序列化后保存
         setSerializedExecutionConfig(new SerializedValue<>(executionConfig));
     }
 

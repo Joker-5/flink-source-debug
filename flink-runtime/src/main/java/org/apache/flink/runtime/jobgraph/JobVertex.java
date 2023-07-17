@@ -43,6 +43,8 @@ import java.util.Map;
 import static org.apache.flink.util.Preconditions.checkNotNull;
 
 /** The base class for job vertexes. */
+// JobGraph 的顶点，JobVertex 和 StreamNode 的区别是，JobVertex 是算子链(Operator Chain)之后的顶点，
+// 其会包含多个 StreamNode
 public class JobVertex implements java.io.Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -521,9 +523,12 @@ public class JobVertex implements java.io.Serializable {
             IntermediateDataSetID intermediateDataSetId,
             boolean isBroadcast) {
 
+        // 获取 IntermediateDataSet，没有就创建一个，
+        // IntermediateDataSet 相当于连接 Vertex 的中间数据集
         IntermediateDataSet dataSet =
                 input.getOrCreateResultDataSet(intermediateDataSetId, partitionType);
 
+        // 创建对应的 JobEdge
         JobEdge edge = new JobEdge(dataSet, this, distPattern, isBroadcast);
         this.inputs.add(edge);
         dataSet.addConsumer(edge);

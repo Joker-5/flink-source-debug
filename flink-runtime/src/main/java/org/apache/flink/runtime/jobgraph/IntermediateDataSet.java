@@ -32,6 +32,7 @@ import static org.apache.flink.util.Preconditions.checkState;
  *
  * <p>Intermediate data sets may be read by other operators, materialized, or discarded.
  */
+// 由 Operator（可能是 Source 算子或中间算子）产生的一个中间数据集
 public class IntermediateDataSet implements java.io.Serializable {
 
     private static final long serialVersionUID = 1L;

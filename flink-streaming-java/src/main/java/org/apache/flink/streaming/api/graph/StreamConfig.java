@@ -70,6 +70,7 @@ import static org.apache.flink.util.Preconditions.checkState;
  * StreamingJobGraphGenerator}.
  */
 @Internal
+// 保存 StreamOperator 的配置信息
 public class StreamConfig implements Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -563,6 +564,7 @@ public class StreamConfig implements Serializable {
     public void setTransitiveChainedTaskConfigs(Map<Integer, StreamConfig> chainedTaskConfigs) {
         if (chainedTaskConfigs != null) {
             chainedTaskConfigs.forEach(
+                    // 异步操作
                     (id, config) -> chainedTaskFutures.put(id, config.getSerializationFuture()));
         }
     }
