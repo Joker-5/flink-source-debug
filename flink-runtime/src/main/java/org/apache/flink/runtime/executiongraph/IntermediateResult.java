@@ -42,6 +42,8 @@ import static org.apache.flink.util.Preconditions.checkArgument;
 import static org.apache.flink.util.Preconditions.checkNotNull;
 import static org.apache.flink.util.Preconditions.checkState;
 
+// 在 ExecutionGraph 中用 IntermediateResult 表示 ExecutionJobVertex 的输出 stream，一个 ExecutionGraph 可能有多个输出 stream，
+// IntermediateResult 就相当于 JobGraph 中的 IntermediateDataSet
 public class IntermediateResult {
 
     private final IntermediateDataSet intermediateDataSet;

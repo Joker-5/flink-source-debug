@@ -31,6 +31,9 @@ import java.util.Set;
 
 import static org.apache.flink.util.Preconditions.checkState;
 
+// 表示 ExecutionVertex 的一个输出分区，
+// 因为 ExecutionJobVertex 可能会有多个并行子任务，因此每个 IntermediateResult 就可能有多个生产者，
+// 每个生产者都会在相应的 IntermediateResult 上输出一个 IntermediateResultPartition 对象
 public class IntermediateResultPartition {
 
     static final int NUM_SUBPARTITIONS_UNKNOWN = -1;

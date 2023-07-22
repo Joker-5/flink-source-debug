@@ -443,6 +443,7 @@ public class JobGraph implements Serializable {
             while (iter.hasNext()) {
                 JobVertex vertex = iter.next();
 
+                // 先把 Source 节点加入集合
                 if (vertex.hasNoConnectedInputs()) {
                     sorted.add(vertex);
                     iter.remove();
@@ -462,6 +463,7 @@ public class JobGraph implements Serializable {
             }
 
             JobVertex current = sorted.get(startNodePos++);
+            // 确保当前添加到集合的节点的前置节点都已经添加到集合中
             addNodesThatHaveNoNewPredecessors(current, sorted, remaining);
         }
 

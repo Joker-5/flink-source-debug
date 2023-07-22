@@ -57,6 +57,8 @@ import static org.apache.flink.util.Preconditions.checkState;
  * The ExecutionVertex is a parallel subtask of the execution. It may be executed once, or several
  * times, each of which time it spawns an {@link Execution}.
  */
+// 在 ExecutionJobVertex 初始化时创建，在进行调度时，一个 ExecutionVertex 就是一个 task，
+// 也就是 ExecutionJobVertex 并行执行的一个子任务
 public class ExecutionVertex
         implements AccessExecutionVertex, Archiveable<ArchivedExecutionVertex> {
 
@@ -128,6 +130,7 @@ public class ExecutionVertex
         this.resultPartitions = new LinkedHashMap<>(producedDataSets.length, 1);
 
         for (IntermediateResult result : producedDataSets) {
+            // 新建 IntermediateResultPartition 对象，并更新到缓存
             IntermediateResultPartition irp =
                     new IntermediateResultPartition(
                             result,
@@ -148,6 +151,8 @@ public class ExecutionVertex
         this.timeout = timeout;
         this.inputSplits = new ArrayList<>();
 
+        // 创建对应的 Execution 对象，
+        // 注意在初始化时 nextAttemptNumber 被初始化为 0，后面每重新调度一次，该值就会自增
         this.currentExecution = createNewExecution(createTimestamp);
 
         getExecutionGraphAccessor().registerExecution(currentExecution);

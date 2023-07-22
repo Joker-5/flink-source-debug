@@ -70,6 +70,7 @@ import static org.apache.flink.util.Preconditions.checkNotNull;
  */
 public class DefaultExecutionGraphBuilder {
 
+    // 生成 ExecutionGraph
     public static DefaultExecutionGraph buildGraph(
             JobGraph jobGraph,
             Configuration jobManagerConfig,
@@ -102,6 +103,7 @@ public class DefaultExecutionGraphBuilder {
         final String jobName = jobGraph.getName();
         final JobID jobId = jobGraph.getJobID();
 
+        // 构建 JobInformation
         final JobInformation jobInformation =
                 new JobInformation(
                         jobId,
@@ -111,6 +113,7 @@ public class DefaultExecutionGraphBuilder {
                         jobGraph.getUserJarBlobKeys(),
                         jobGraph.getClasspaths());
 
+        // 获取历史记录中保存的最大执行尝试次数
         final int executionHistorySizeLimit =
                 jobManagerConfig.getInteger(JobManagerOptions.MAX_ATTEMPTS_HISTORY_SIZE);
 
@@ -119,6 +122,7 @@ public class DefaultExecutionGraphBuilder {
                         jobManagerConfig);
 
         // create a new execution graph, if none exists so far
+        // 如果 ExecutionGraph 不存在，则创建一个
         final DefaultExecutionGraph executionGraph;
         try {
             executionGraph =
@@ -151,6 +155,7 @@ public class DefaultExecutionGraphBuilder {
         // set the basic properties
 
         try {
+            // 以 JSON 形式记录 ExecutionGraph
             executionGraph.setJsonPlan(JsonPlanGenerator.generatePlan(jobGraph));
         } catch (Throwable t) {
             log.warn("Cannot create JSON plan for job", t);
@@ -177,6 +182,8 @@ public class DefaultExecutionGraphBuilder {
             }
 
             try {
+                // 对于 InputOutputFormatVertex 类型的对象（忽略测试类，只有这个类型重写了 initializeOnMaster 方法），
+                // 会在 Master 节点做一些额外的初始化操作
                 vertex.initializeOnMaster(
                         new SimpleInitializeOnMasterContext(
                                 classLoader,
@@ -196,6 +203,7 @@ public class DefaultExecutionGraphBuilder {
                 (System.nanoTime() - initMasterStart) / 1_000_000);
 
         // topologically sort the job vertices and attach the graph to the existing one
+        // 对 JobVertex 安装指定规则进行排序
         List<JobVertex> sortedTopology = jobGraph.getVerticesSortedTopologicallyFromSources();
         if (log.isDebugEnabled()) {
             log.debug(
@@ -204,6 +212,7 @@ public class DefaultExecutionGraphBuilder {
                     jobName,
                     jobId);
         }
+        // 核心方法，生成具体的 ExecutionGraph
         executionGraph.attachJobGraph(sortedTopology);
 
         if (log.isDebugEnabled()) {
@@ -215,6 +224,7 @@ public class DefaultExecutionGraphBuilder {
         if (isDynamicGraph) {
             // dynamic graph does not support checkpointing so we skip it
             log.warn("Skip setting up checkpointing for a job with dynamic graph.");
+        // Checkpoint 相关配置
         } else if (isCheckpointingEnabled(jobGraph)) {
             JobCheckpointingSettings snapshotSettings = jobGraph.getCheckpointingSettings();
 
@@ -318,6 +328,7 @@ public class DefaultExecutionGraphBuilder {
                     snapshotSettings.getCheckpointCoordinatorConfiguration();
             String changelogStorage = jobManagerConfig.getString(STATE_CHANGE_LOG_STORAGE);
 
+            // 在方法内创建 CheckpointCoordinator 对象
             executionGraph.enableCheckpointing(
                     chkConfig,
                     hooks,

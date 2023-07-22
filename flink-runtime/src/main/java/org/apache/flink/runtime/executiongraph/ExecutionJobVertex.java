@@ -79,6 +79,8 @@ import static org.apache.flink.util.Preconditions.checkState;
  * <p>The {@code ExecutionJobVertex} corresponds to a parallelized operation. It contains an {@link
  * ExecutionVertex} for each parallel instance of that operation.
  */
+// ExecutionJobVertex 是 ExecutionGraph 中的节点，其与 JobGraph 中的 JobVertex 一一对应，
+// 每个 ExecutionJobVertex 都是由一个 JobVertex 生成的
 public class ExecutionJobVertex
         implements AccessExecutionJobVertex, Archiveable<ArchivedExecutionJobVertex> {
 
@@ -91,6 +93,8 @@ public class ExecutionJobVertex
 
     private final JobVertex jobVertex;
 
+    // ExecutionVertex 类型的数组，数组的大小就是 ExecutionJobVertex 的并行度，
+    // 在创建 ExecutionJobVertex 对象时，就会创建与并行度相同的 ExecutionVertex 类型的对象
     @Nullable private ExecutionVertex[] taskVertices;
 
     @Nullable private IntermediateResult[] producedDataSets;
@@ -135,6 +139,7 @@ public class ExecutionJobVertex
         this.graph = graph;
         this.jobVertex = jobVertex;
 
+        // 获取并行度
         this.parallelismInfo = parallelismInfo;
 
         // verify that our parallelism is not higher than the maximum parallelism
@@ -166,17 +171,21 @@ public class ExecutionJobVertex
         checkState(parallelismInfo.getParallelism() > 0);
         checkState(!isInitialized());
 
+        // 用 taskVertices 记录这个 task 的并行度
         this.taskVertices = new ExecutionVertex[parallelismInfo.getParallelism()];
 
+        // 记录输入的 IntermediateResult 列表
         this.inputs = new ArrayList<>(jobVertex.getInputs().size());
 
         // create the intermediate results
+        // 创建 IntermediateResult 对象数组
         this.producedDataSets =
                 new IntermediateResult[jobVertex.getNumberOfProducedIntermediateDataSets()];
 
         for (int i = 0; i < jobVertex.getProducedDataSets().size(); i++) {
             final IntermediateDataSet result = jobVertex.getProducedDataSets().get(i);
 
+            // 将 JobGraph 中的 IntermediateDataSet 转换为 IntermediateResult，二者一一对应
             this.producedDataSets[i] =
                     new IntermediateResult(
                             result,
@@ -187,6 +196,8 @@ public class ExecutionJobVertex
 
         // create all task vertices
         for (int i = 0; i < this.parallelismInfo.getParallelism(); i++) {
+            // 创建 ExecutionVertex，一个 JobVertex/ExecutionJobVertex 代表一个算子链，
+            // ExecutionVertex 代表一个 task
             ExecutionVertex vertex =
                     createExecutionVertex(
                             this,

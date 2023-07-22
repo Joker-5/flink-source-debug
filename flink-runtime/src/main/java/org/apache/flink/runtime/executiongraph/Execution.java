@@ -111,6 +111,8 @@ import static org.apache.flink.util.Preconditions.checkState;
  * a completed call is as expected, and trigger correcting actions if it is not. Many actions are
  * also idempotent (like canceling).
  */
+// Execution 是对 ExecutionVertex 的一次执行，通过 ExecutionAttemptID 做唯一标识，
+// 一个 ExecutionVertex 在某些情况下可能会执行多次，比如遇到失败或 task 的数据需要重新计算时    
 public class Execution
         implements AccessExecution, Archiveable<ArchivedExecution>, LogicalSlot.Payload {
 
@@ -127,6 +129,7 @@ public class Execution
     private final ExecutionVertex vertex;
 
     /** The unique ID marking the specific execution instant of the task. */
+    // Execution 的唯一标识
     private final ExecutionAttemptID attemptId;
 
     /**
