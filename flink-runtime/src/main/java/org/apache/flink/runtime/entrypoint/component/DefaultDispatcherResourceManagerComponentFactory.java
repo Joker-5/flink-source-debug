@@ -123,12 +123,15 @@ public class DefaultDispatcherResourceManagerComponentFactory
         DispatcherRunner dispatcherRunner = null;
 
         try {
+            // 用于 Dispatcher 的 Leader 选举
             dispatcherLeaderRetrievalService =
                     highAvailabilityServices.getDispatcherLeaderRetriever();
 
+            // 用于 ResourceManager 的 Leader 选举
             resourceManagerRetrievalService =
                     highAvailabilityServices.getResourceManagerLeaderRetriever();
 
+            // Dispatcher 的 gateway
             final LeaderGatewayRetriever<DispatcherGateway> dispatcherGatewayRetriever =
                     new RpcGatewayRetriever<>(
                             rpcService,
@@ -137,6 +140,7 @@ public class DefaultDispatcherResourceManagerComponentFactory
                             new ExponentialBackoffRetryStrategy(
                                     12, Duration.ofMillis(10), Duration.ofMillis(50)));
 
+            // ResourceManager 的 gateway
             final LeaderGatewayRetriever<ResourceManagerGateway> resourceManagerGatewayRetriever =
                     new RpcGatewayRetriever<>(
                             rpcService,
@@ -174,10 +178,12 @@ public class DefaultDispatcherResourceManagerComponentFactory
                             fatalErrorHandler);
 
             log.debug("Starting Dispatcher REST endpoint.");
+            // 启动 Dispatcher REST endpoint
             webMonitorEndpoint.start();
 
             final String hostname = RpcUtils.getHostname(rpcService);
 
+            // 创建 ResourceManagerService
             resourceManagerService =
                     ResourceManagerServiceImpl.create(
                             resourceManagerFactory,
@@ -202,6 +208,7 @@ public class DefaultDispatcherResourceManagerComponentFactory
                     new DispatcherOperationCaches(
                             configuration.get(RestOptions.ASYNC_OPERATION_STORE_DURATION));
 
+            // 创建 DispatcherService
             final PartialDispatcherServices partialDispatcherServices =
                     new PartialDispatcherServices(
                             configuration,
@@ -220,6 +227,7 @@ public class DefaultDispatcherResourceManagerComponentFactory
                             dispatcherOperationCaches);
 
             log.debug("Starting Dispatcher.");
+            // 启动 Dispatcher
             dispatcherRunner =
                     dispatcherRunnerFactory.createDispatcherRunner(
                             highAvailabilityServices.getDispatcherLeaderElectionService(),
@@ -230,6 +238,7 @@ public class DefaultDispatcherResourceManagerComponentFactory
                             partialDispatcherServices);
 
             log.debug("Starting ResourceManagerService.");
+            // 启动 ResourceManagerService
             resourceManagerService.start();
 
             resourceManagerRetrievalService.start(resourceManagerGatewayRetriever);
@@ -246,6 +255,7 @@ public class DefaultDispatcherResourceManagerComponentFactory
 
         } catch (Exception exception) {
             // clean up all started components
+            // 清理所有上面已经启动的服务
             if (dispatcherLeaderRetrievalService != null) {
                 try {
                     dispatcherLeaderRetrievalService.stop();
