@@ -184,6 +184,7 @@ public class PipelinedRegionSchedulingStrategy implements SchedulingStrategy {
                 IterableUtils.toStream(schedulingTopology.getAllPipelinedRegions())
                         .filter(this::isSourceRegion)
                         .collect(Collectors.toSet());
+        // 执行调度
         maybeScheduleRegions(sourceRegions);
     }
 
@@ -230,6 +231,7 @@ public class PipelinedRegionSchedulingStrategy implements SchedulingStrategy {
         // schedule regions in topological order.
         SchedulingStrategyUtils.sortPipelinedRegionsInTopologicalOrder(
                         schedulingTopology, regionsToSchedule)
+                // 执行调度的核心方法
                 .forEach(this::scheduleRegion);
     }
 
@@ -284,6 +286,7 @@ public class PipelinedRegionSchedulingStrategy implements SchedulingStrategy {
                 areRegionVerticesAllInCreatedState(region),
                 "BUG: trying to schedule a region which is not in CREATED state");
         scheduledRegions.add(region);
+        // 分配 slot 并部署
         schedulerOperations.allocateSlotsAndDeploy(regionVerticesSorted.get(region));
     }
 

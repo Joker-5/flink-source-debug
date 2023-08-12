@@ -602,7 +602,9 @@ public abstract class SchedulerBase implements SchedulerNG, CheckpointScheduling
     // ------------------------------------------------------------------------
 
     @Override
+    // 调度作业
     public final void startScheduling() {
+        // 启动线程
         mainThreadExecutor.assertRunningInMainThread();
         registerJobMetrics(
                 jobManagerJobMetricGroup,
@@ -612,6 +614,7 @@ public abstract class SchedulerBase implements SchedulerNG, CheckpointScheduling
                 executionGraph::registerJobStatusListener,
                 executionGraph.getStatusTimestamp(JobStatus.INITIALIZING),
                 jobStatusMetricsSettings);
+        
         operatorCoordinatorHandler.startAllOperatorCoordinators();
         startSchedulingInternal();
     }

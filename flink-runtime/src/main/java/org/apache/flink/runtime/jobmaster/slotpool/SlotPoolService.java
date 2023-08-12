@@ -36,6 +36,10 @@ import java.util.Collection;
 import java.util.Optional;
 
 /** Service used by the {@link JobMaster} to manage a slot pool. */
+// 1、SlotPoolService 用于为 JM 管理 slot pool
+// 2、slot pool 为当前作业的 slot 请求而服务，它会向 RM 请求 slot 资源
+// 3、slot pool 会维护请求到的 slot 列表信息，即使 RM 挂掉了，也可以使用当前作业空闲的 slot 资源进行分配
+// 4、而如果一个 slot 不再使用的话，即使作业在运行，也是可以释放掉的（所有的 slot 都是通过 AllocationID 来区分的）
 public interface SlotPoolService extends AutoCloseable {
 
     /**
@@ -93,6 +97,7 @@ public interface SlotPoolService extends AutoCloseable {
      * @param cause cause why the allocation failed
      * @return Optional task executor if it has no more slots registered
      */
+    // 分配失败，并释放相应的 slot，这种情况可能是请求超时由 JM 触发或者 TM 分配失败
     Optional<ResourceID> failAllocation(
             @Nullable ResourceID taskManagerId, AllocationID allocationId, Exception cause);
 
@@ -102,6 +107,7 @@ public interface SlotPoolService extends AutoCloseable {
      * @param taskManagerId identifying the TaskExecutor to register
      * @return true iff a new resource id was registered
      */
+    // 注册 TM，此处会记录注册过来的 TM，只能向注册过的 TM 分配 slot
     boolean registerTaskManager(ResourceID taskManagerId);
 
     /**
@@ -111,6 +117,7 @@ public interface SlotPoolService extends AutoCloseable {
      * @param cause for the releasing of the TaskManager
      * @return true iff a given registered resource id was removed
      */
+    // 注销 TM，该 TM 相关的 slot 都会被释放，task 会被取消，slot pool 会通知相应 TM 释放掉 slot
     boolean releaseTaskManager(ResourceID taskManagerId, Exception cause);
 
     /**
@@ -127,6 +134,7 @@ public interface SlotPoolService extends AutoCloseable {
      *
      * @param resourceManagerGateway The RPC gateway for the resource manager.
      */
+    // slot pool 与 RM 建立连接，之后 slot pool 就可以向 RM 请求 slot 资源了
     void connectToResourceManager(ResourceManagerGateway resourceManagerGateway);
 
     /**
@@ -144,6 +152,7 @@ public interface SlotPoolService extends AutoCloseable {
      * @param taskManagerId identifies the task manager
      * @return the allocated slots on the task manager
      */
+    // 汇报指定 TM 上的 slot 分配情况
     AllocatedSlotReport createAllocatedSlotReport(ResourceID taskManagerId);
 
     /**

@@ -153,12 +153,15 @@ public class JobMaster extends FencedRpcEndpoint<JobMasterId>
 
     private final ResourceID resourceId;
 
+    // 作业的 JobGraph 信息
     private final JobGraph jobGraph;
 
     private final Time rpcTimeout;
 
+    // HA 服务，这里主要用于监控 RM Leader，如果 RM Leader 有变换，这里会和新 Leader 建立连接
     private final HighAvailabilityServices highAvailabilityServices;
 
+    // 用于将数据上传到 BlobServer，这里主要上传 JobInformation 和 TaskInformation
     private final BlobWriter blobWriter;
 
     private final HeartbeatServices heartbeatServices;
@@ -173,6 +176,7 @@ public class JobMaster extends FencedRpcEndpoint<JobMasterId>
 
     private final ClassLoader userCodeLoader;
 
+    // 处理 slot 相关内容
     private final SlotPoolService slotPoolService;
 
     private final long initializationTimestamp;
@@ -187,10 +191,11 @@ public class JobMaster extends FencedRpcEndpoint<JobMasterId>
 
     private final Map<ResourceID, TaskManagerRegistration> registeredTaskManagers;
 
+    // 用于注册 Intermediate result partition，在作业调度时使用
     private final ShuffleMaster<?> shuffleMaster;
 
     // --------- Scheduler --------
-
+    // 用于调度作业的 ExecutionGraph
     private final SchedulerNG schedulerNG;
 
     private final JobManagerJobStatusListener jobStatusListener;
@@ -201,6 +206,7 @@ public class JobMaster extends FencedRpcEndpoint<JobMasterId>
 
     private final Map<String, Object> accumulators;
 
+    // 用于追踪 Intermediate result partition 的服务
     private final JobMasterPartitionTracker partitionTracker;
 
     private final ExecutionDeploymentTracker executionDeploymentTracker;
@@ -344,6 +350,7 @@ public class JobMaster extends FencedRpcEndpoint<JobMasterId>
 
         this.jobManagerJobMetricGroup = jobMetricGroupFactory.create(jobGraph);
         this.jobStatusListener = new JobManagerJobStatusListener();
+        // 创建 scheduler
         this.schedulerNG =
                 createScheduler(
                         slotPoolServiceSchedulerFactory,
@@ -457,6 +464,7 @@ public class JobMaster extends FencedRpcEndpoint<JobMasterId>
     // ----------------------------------------------------------------------------------------------
 
     @Override
+    // 取消当前正在执行的作业，如果作业还在调度会执行停止；如果作业正在运行，则会向对应的 TM 发送取消 task 的请求
     public CompletableFuture<Acknowledge> cancel(Time timeout) {
         schedulerNG.cancel();
 
@@ -470,6 +478,7 @@ public class JobMaster extends FencedRpcEndpoint<JobMasterId>
      * @return Acknowledge the task execution state update
      */
     @Override
+    // 更新 task 的状态信息，这是 TM 主动向 JM 发送的更新请求
     public CompletableFuture<Acknowledge> updateTaskExecutionState(
             final TaskExecutionState taskExecutionState) {
         FlinkException taskExecutionException;
@@ -508,6 +517,7 @@ public class JobMaster extends FencedRpcEndpoint<JobMasterId>
     }
 
     @Override
+    // 获取指定 Result Partition 对应生产者的 JobVertex 的执行状态
     public CompletableFuture<ExecutionState> requestPartitionState(
             final IntermediateDataSetID intermediateResultId,
             final ResultPartitionID resultPartitionId) {
@@ -522,6 +532,7 @@ public class JobMaster extends FencedRpcEndpoint<JobMasterId>
     }
 
     @Override
+    // TM 心跳超时或作业取消时会调用这个方法，此时 JM 会释放这个 TM 上的所有 slot 资源
     public CompletableFuture<Acknowledge> disconnectTaskManager(
             final ResourceID resourceID, final Exception cause) {
         log.info(
@@ -548,6 +559,8 @@ public class JobMaster extends FencedRpcEndpoint<JobMasterId>
 
     // TODO: This method needs a leader session ID
     @Override
+    // 当一个 task 完成 snapshot 时，会通过这个接口通知 JM 进行相应处理，
+    // 如果这个 cp 的所有 task 都已经 ack 了，则意味着 cp 完成
     public void acknowledgeCheckpoint(
             final JobID jobID,
             final ExecutionAttemptID executionAttemptID,
@@ -575,6 +588,8 @@ public class JobMaster extends FencedRpcEndpoint<JobMasterId>
 
     // TODO: This method needs a leader session ID
     @Override
+    // TM 向 JM 发送此消息，通知 JM 的 Checkpoint Coordinator 这个 checkpoint request 没有响应，
+    // 例如：TM 触发 cp 失败，这样 Checkpoint Coordinator 就知道这个 cp 失败，然后进行相应处理
     public void declineCheckpoint(DeclineCheckpoint decline) {
         schedulerNG.declineCheckpoint(decline);
     }
@@ -606,6 +621,7 @@ public class JobMaster extends FencedRpcEndpoint<JobMasterId>
     }
 
     @Override
+    // 请求某个注册过 registrationName 对应的 KvState 的位置信息
     public CompletableFuture<KvStateLocation> requestKvStateLocation(
             final JobID jobId, final String registrationName) {
         try {
@@ -618,6 +634,7 @@ public class JobMaster extends FencedRpcEndpoint<JobMasterId>
     }
 
     @Override
+    // 当注册一个 KvState 时，会调用此方法，一个 operator 在初始化时会调用这个方法注册一个 KvState
     public CompletableFuture<Acknowledge> notifyKvStateRegistered(
             final JobID jobId,
             final JobVertexID jobVertexId,
@@ -642,6 +659,8 @@ public class JobMaster extends FencedRpcEndpoint<JobMasterId>
     }
 
     @Override
+    // 取消一个 KvState 的注册，operator 在关闭 state backend 时会调用此方法，
+    // 比如 operator 的生命周期结束
     public CompletableFuture<Acknowledge> notifyKvStateUnregistered(
             JobID jobId,
             JobVertexID jobVertexId,
@@ -658,6 +677,7 @@ public class JobMaster extends FencedRpcEndpoint<JobMasterId>
     }
 
     @Override
+    // TM 通知 JM 其上面分配到的 slot 列表
     public CompletableFuture<Collection<SlotOffer>> offerSlots(
             final ResourceID taskManagerId, final Collection<SlotOffer> slots, final Time timeout) {
 
@@ -680,6 +700,7 @@ public class JobMaster extends FencedRpcEndpoint<JobMasterId>
     }
 
     @Override
+    // 当 TM 分配 slot 失败，比如 slot 分配时状态转移失败，会调用这个方法通知 JM
     public void failSlot(
             final ResourceID taskManagerId,
             final AllocationID allocationId,
@@ -719,6 +740,8 @@ public class JobMaster extends FencedRpcEndpoint<JobMasterId>
     }
 
     @Override
+    // 向 JM 注册 TM，并通过心跳监控对应的 TM，
+    // 只有注册过的 TM 的 slot 才是有效的，才会进行相应的分配
     public CompletableFuture<RegistrationResponse> registerTaskManager(
             final JobID jobId,
             final TaskManagerRegistrationInformation taskManagerRegistrationInformation,
@@ -816,6 +839,10 @@ public class JobMaster extends FencedRpcEndpoint<JobMasterId>
     }
 
     @Override
+    // 与 RM 断开连接，有 3 种条件会触发：
+    // 1、JM 与 RM 心跳超时
+    // 2、作业取消
+    // 3、重连 RM 时断开连接，比如 RM leader 切换、RM 心跳超时
     public void disconnectResourceManager(
             final ResourceManagerId resourceManagerId, final Exception cause) {
 
@@ -830,12 +857,14 @@ public class JobMaster extends FencedRpcEndpoint<JobMasterId>
     }
 
     @Override
+    // TM 向 JM 发送心跳消息
     public CompletableFuture<Void> heartbeatFromTaskManager(
             final ResourceID resourceID, TaskExecutorToJobManagerHeartbeatPayload payload) {
         return taskManagerHeartbeatManager.receiveHeartbeat(resourceID, payload);
     }
 
     @Override
+    // JM 向 RM 发送心跳消息，RM 会监听 JM 是否超时
     public CompletableFuture<Void> heartbeatFromResourceManager(final ResourceID resourceID) {
         return resourceManagerHeartbeatManager.requestHeartbeat(resourceID, null);
     }
@@ -846,11 +875,13 @@ public class JobMaster extends FencedRpcEndpoint<JobMasterId>
     }
 
     @Override
+    // 请求这个作业的执行状态 JobStatus
     public CompletableFuture<JobStatus> requestJobStatus(Time timeout) {
         return CompletableFuture.completedFuture(schedulerNG.requestJobStatus());
     }
 
     @Override
+    // 请求这个作业的 ArchivedExecutionGraph（ExecutionGraph 序列化后的结果）
     public CompletableFuture<ExecutionGraphInfo> requestJob(Time timeout) {
         return CompletableFuture.completedFuture(schedulerNG.requestJob());
     }
@@ -862,6 +893,7 @@ public class JobMaster extends FencedRpcEndpoint<JobMasterId>
     }
 
     @Override
+    // 对作业触发一次 savepoint
     public CompletableFuture<String> triggerSavepoint(
             @Nullable final String targetDirectory,
             final boolean cancelJob,
@@ -872,6 +904,8 @@ public class JobMaster extends FencedRpcEndpoint<JobMasterId>
     }
 
     @Override
+    // 停止作业前触发一次 savepoint，
+    // 比如用户手动停止作业时指定一个 savepoint 路径，这样就会在停止前触发一次 savepoint
     public CompletableFuture<String> stopWithSavepoint(
             @Nullable final String targetDirectory,
             final SavepointFormatType formatType,
@@ -957,7 +991,7 @@ public class JobMaster extends FencedRpcEndpoint<JobMasterId>
                 jobGraph.getName(),
                 jobGraph.getJobID(),
                 getFencingToken());
-
+        // 调度作业
         startScheduling();
     }
 

@@ -35,6 +35,7 @@ public class SlotSelectionStrategyUtils {
 
     private static final Logger LOG = LoggerFactory.getLogger(SlotSelectionStrategyUtils.class);
 
+    // 选择 slot 分配策略
     public static SlotSelectionStrategy selectSlotSelectionStrategy(
             final JobType jobType, final Configuration configuration) {
         final boolean evenlySpreadOutSlots =
@@ -47,10 +48,14 @@ public class SlotSelectionStrategyUtils {
                         ? LocationPreferenceSlotSelectionStrategy.createEvenlySpreadOut()
                         : LocationPreferenceSlotSelectionStrategy.createDefault();
 
+        // 根据 state.backend.local-recover 配置选择
         final boolean isLocalRecoveryEnabled =
                 configuration.getBoolean(CheckpointingOptions.LOCAL_RECOVERY);
         if (isLocalRecoveryEnabled) {
+            // 流处理任务
             if (jobType == JobType.STREAMING) {
+                // PreviousAllocationSlotSelectionStrategy 策略会根据上次的分配记录，如果这个位置刚好在 slot pool 的可用列表里，就会直接选择这个 slot，
+                // 否则就会进入 locationPreferenceSlotSelectionStrategy 的处理逻辑
                 return PreviousAllocationSlotSelectionStrategy.create(
                         locationPreferenceSlotSelectionStrategy);
             } else {
@@ -60,6 +65,7 @@ public class SlotSelectionStrategyUtils {
                 return locationPreferenceSlotSelectionStrategy;
             }
         } else {
+            // LocationPreferenceSlotSelectionStrategy 策略会对可用的 slot 列表打分，选择分数最高的（分数相同取第一个）
             return locationPreferenceSlotSelectionStrategy;
         }
     }
