@@ -97,6 +97,7 @@ class HeapReducingState<K, N, V> extends AbstractHeapMergingState<K, N, V, V, V>
         }
 
         try {
+            // 在新加入值时会执行 reduceTransformation#apply 方法，进行具体的 reduce 操作
             stateTable.transform(currentNamespace, value, reduceTransformation);
         } catch (Exception e) {
             throw new IOException("Exception while applying ReduceFunction in reducing state", e);

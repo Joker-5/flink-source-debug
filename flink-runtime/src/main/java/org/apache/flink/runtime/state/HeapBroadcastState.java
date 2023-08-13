@@ -44,6 +44,7 @@ public class HeapBroadcastState<K, V> implements BackendWritableBroadcastState<K
     private RegisteredBroadcastStateBackendMetaInfo<K, V> stateMetaInfo;
 
     /** The internal map the holds the elements of the state. */
+    // Broadcast State 本质上就是一个 Map
     private final Map<K, V> backingMap;
 
     /** A serializer that allows to perform deep copies of internal map state. */

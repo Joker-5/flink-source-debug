@@ -34,6 +34,7 @@ import java.util.List;
  * @param <N> type of namespace.
  * @param <S> type of state.
  */
+// 支持异步 cp
 public class CopyOnWriteStateTable<K, N, S> extends StateTable<K, N, S> {
 
     /**

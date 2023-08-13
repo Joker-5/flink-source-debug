@@ -43,10 +43,14 @@ public interface OperatorStateHandle extends StreamStateHandle {
      * The modes that determine how an {@link OperatorStreamStateHandle} is assigned to tasks during
      * restore.
      */
+    // 定义任务恢复时状态的分配模式
     enum Mode {
+        // ListState 使用
         SPLIT_DISTRIBUTE, // The operator state partitions in the state handle are split and
         // distributed to one task each.
+        // Union ListState 使用
         UNION, // The operator state partitions are UNION-ed upon restoring and sent to all tasks.
+        // BoardCastState 使用
         BROADCAST // The operator states are identical, as the state is produced from a broadcast
         // stream.
     }

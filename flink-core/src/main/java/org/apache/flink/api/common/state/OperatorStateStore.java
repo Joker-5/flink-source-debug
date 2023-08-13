@@ -23,6 +23,8 @@ import org.apache.flink.annotation.PublicEvolving;
 import java.util.Set;
 
 /** This interface contains methods for registering operator state with a managed store. */
+// OperatorStateStore 定义了用于创建和管理托管状态的方法，
+// 包括 ListState、UnionListState 以及 BroadcastState
 @PublicEvolving
 public interface OperatorStateStore {
 
@@ -74,6 +76,7 @@ public interface OperatorStateStore {
      * @param <S> The generic type of the state
      * @return A list for all state partitions.
      */
+    // 从返回值来看，ListState 和 UnionListState 的底层存储都是一致的，只是在状态恢复的时候状态的分配模式不一致
     <S> ListState<S> getListState(ListStateDescriptor<S> stateDescriptor) throws Exception;
 
     /**

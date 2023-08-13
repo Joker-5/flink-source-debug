@@ -23,6 +23,7 @@ import org.apache.flink.runtime.state.metainfo.StateMetaInfoSnapshot;
 import javax.annotation.Nonnull;
 
 /** Base class for all registered state in state backends. */
+// 所有状态元信息的抽象父类
 public abstract class RegisteredStateMetaInfoBase {
 
     /** The name of the state */

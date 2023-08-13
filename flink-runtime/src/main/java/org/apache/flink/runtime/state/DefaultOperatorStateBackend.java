@@ -45,6 +45,7 @@ import java.util.concurrent.RunnableFuture;
 
 /** Default implementation of OperatorStateStore that provides the ability to make snapshots. */
 @Internal
+// OperatorStateBackend 默认实现
 public class DefaultOperatorStateBackend implements OperatorStateBackend {
 
     private static final Logger LOG = LoggerFactory.getLogger(DefaultOperatorStateBackend.class);
@@ -53,9 +54,11 @@ public class DefaultOperatorStateBackend implements OperatorStateBackend {
     public static final String DEFAULT_OPERATOR_STATE_NAME = "_default_";
 
     /** Map for all registered operator states. Maps state name -> state */
+    // 存储已注册 ListState 名与状态之间的映射关系
     private final Map<String, PartitionableListState<?>> registeredOperatorStates;
 
     /** Map for all registered operator broadcast states. Maps state name -> state */
+    // 存储已注册 BroadcastState 名与状态之间的映射关系
     private final Map<String, BackendWritableBroadcastState<?, ?>> registeredBroadcastStates;
 
     /** CloseableRegistry to participate in the tasks lifecycle. */
@@ -231,6 +234,7 @@ public class DefaultOperatorStateBackend implements OperatorStateBackend {
                 checkpointId, timestamp, streamFactory, checkpointOptions);
     }
 
+    // 获取 ListState
     private <S> ListState<S> getListState(
             ListStateDescriptor<S> stateDescriptor, OperatorStateHandle.Mode mode)
             throws StateMigrationException {
@@ -259,9 +263,11 @@ public class DefaultOperatorStateBackend implements OperatorStateBackend {
                 Preconditions.checkNotNull(stateDescriptor.getElementSerializer());
 
         @SuppressWarnings("unchecked")
+        // 获取状态
         PartitionableListState<S> partitionableListState =
                 (PartitionableListState<S>) registeredOperatorStates.get(name);
 
+        // 状态不存在，创建一个新的状态
         if (null == partitionableListState) {
             // no restored state for the state name; simply create new state holder
 
@@ -284,6 +290,7 @@ public class DefaultOperatorStateBackend implements OperatorStateBackend {
                     partitionableListState.getStateMetaInfo();
 
             // check compatibility to determine if new serializers are incompatible
+            // 状态存在，判断是否兼容
             TypeSerializer<S> newPartitionStateSerializer = partitionStateSerializer.duplicate();
 
             TypeSerializerSchemaCompatibility<S> stateCompatibility =

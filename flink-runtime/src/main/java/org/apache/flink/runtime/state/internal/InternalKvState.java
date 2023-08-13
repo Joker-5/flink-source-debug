@@ -61,6 +61,7 @@ import java.util.Collection;
  * @param <N> The type of the namespace
  * @param <V> The type of values kept internally in state
  */
+// InternalKvState 相关方法由内部代码调用
 public interface InternalKvState<K, N, V> extends State {
 
     /** Returns the {@link TypeSerializer} for the type of key this state is associated to. */

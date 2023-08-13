@@ -67,6 +67,7 @@ public class TtlStateFactory<K, N, SV, TTLSV, S extends State, IS extends S> {
                 ? new TtlStateFactory<K, N, SV, TTLSV, S, IS>(
                                 namespaceSerializer, stateDesc, stateBackend, timeProvider)
                         .createState()
+                // 没开启 TTL，具体逻辑由不同的 state backend 自行实现
                 : stateBackend.createOrUpdateInternalState(namespaceSerializer, stateDesc);
     }
 

@@ -50,6 +50,7 @@ import static org.apache.flink.util.Preconditions.checkNotNull;
  *
  * @param <K> Type of the key by which state is keyed.
  */
+// 所有 KeyedStateBackend 的抽象父类
 public abstract class AbstractKeyedStateBackend<K>
         implements CheckpointableKeyedStateBackend<K>,
                 InternalCheckpointListener,
@@ -359,6 +360,7 @@ public abstract class AbstractKeyedStateBackend<K>
             }
             kvState =
                     LatencyTrackingStateFactory.createStateAndWrapWithLatencyTrackingIfEnabled(
+                            // 根据是否开启 TTL 进行不同的创建处理
                             TtlStateFactory.createStateAndWrapWithTtlIfEnabled(
                                     namespaceSerializer, stateDescriptor, this, ttlTimeProvider),
                             stateDescriptor,
@@ -410,6 +412,7 @@ public abstract class AbstractKeyedStateBackend<K>
             return (S) previous;
         }
 
+        // 获取或创建 Keyed State
         final S state = getOrCreateKeyedState(namespaceSerializer, stateDescriptor);
         final InternalKvState<K, N, ?> kvState = (InternalKvState<K, N, ?>) state;
 

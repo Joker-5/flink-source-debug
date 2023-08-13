@@ -34,12 +34,15 @@ import java.util.List;
  *
  * @param <S> the type of an operator state partition.
  */
+// ListState 的具体实现
 public final class PartitionableListState<S> implements ListState<S> {
 
     /** Meta information of the state, including state name, assignment mode, and typeSerializer */
+    // 存储状态的元信息，包括状态名、分配模式、序列化器等
     private RegisteredOperatorStateBackendMetaInfo<S> stateMetaInfo;
 
     /** The internal list the holds the elements of the state */
+    // ListState 本质上就是一个 ArrayList
     private final ArrayList<S> internalList;
 
     /** A typeSerializer that allows to perform deep copies of internalList */

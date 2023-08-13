@@ -69,6 +69,7 @@ class HeapValueState<K, N, V> extends AbstractHeapState<K, N, V>
 
     @Override
     public V value() {
+        // HeapValueState 在 StateTable 中存储的是具体的值
         final V result = stateTable.get(currentNamespace);
 
         if (result == null) {

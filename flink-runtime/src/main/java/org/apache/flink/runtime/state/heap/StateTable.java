@@ -51,6 +51,11 @@ import java.util.stream.StreamSupport;
  * @param <N> type of namespace
  * @param <S> type of state
  */
+// 基于堆内存的 state 的底层实现，有 3 个泛型参数：
+// 1、Key 的类型
+// 2、Namespace 的类型
+// 3、Value 的类型
+// 可以将 StateTable 理解为 (Key, Namespace) -> Value 的存储形式
 public abstract class StateTable<K, N, S>
         implements StateSnapshotRestore, Iterable<StateEntry<K, N, S>> {
 

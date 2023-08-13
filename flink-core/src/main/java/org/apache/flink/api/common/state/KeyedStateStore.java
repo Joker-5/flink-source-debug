@@ -22,6 +22,8 @@ import org.apache.flink.annotation.PublicEvolving;
 
 /** This interface contains methods for registering keyed state with a managed store. */
 @PublicEvolving
+// KeyedStateStore 定义了用于创建和管理托管 keyed state 的方法，
+// 分别对应 ValueState、ListState、ReducingState、AggregatingState 以及 MapState
 public interface KeyedStateStore {
 
     /**

@@ -41,8 +41,11 @@ import static java.util.Objects.requireNonNull;
  * Default implementation of KeyedStateStore that currently forwards state registration to a {@link
  * RuntimeContext}.
  */
+// KeyedStateStore 的默认实现
 public class DefaultKeyedStateStore implements KeyedStateStore {
 
+    // DefaultKeyedStateStore 持有 KeyedStateBackend 的引用，
+    // 所有的状态获取的方法实际上都由 KeyedStateBackend 来完成
     protected final KeyedStateBackend<?> keyedStateBackend;
     protected final ExecutionConfig executionConfig;
 
@@ -57,6 +60,7 @@ public class DefaultKeyedStateStore implements KeyedStateStore {
         requireNonNull(stateProperties, "The state properties must not be null");
         try {
             stateProperties.initializeSerializerUnlessSet(executionConfig);
+            // 获取状态
             return getPartitionedState(stateProperties);
         } catch (Exception e) {
             throw new RuntimeException("Error while getting state", e);
@@ -112,6 +116,13 @@ public class DefaultKeyedStateStore implements KeyedStateStore {
 
     protected <S extends State> S getPartitionedState(StateDescriptor<S, ?> stateDescriptor)
             throws Exception {
+        // 注意方法中前两个和 namespace 有关的参数，
+        // 通过引入 namespace，Flink 可以确保在不同的 namespace 下存在相同名称的状态，但它们的值不用相同。
+        // 也就是说，状态实际上是和（namespace, name）这两个值相对应的。
+        // namespace 的主要应用场景是在窗口中，比如说，假如我需要在窗口中使用状态，这个状态是和具体的窗口相关联的，
+        // 假如没有 namespace 的存在，我们要如何获取窗口间互相独立的状态呢？
+        // 有了 namespace，把窗口作为 namespace，这个问题自然迎刃而解了。注意，只有无法合并的窗口才可以这样使用，
+        // 如果窗口可以合并（如session window），则无法保证 namespace 的不变性，自然不能这样使用。
         return keyedStateBackend.getPartitionedState(
                 VoidNamespace.INSTANCE, VoidNamespaceSerializer.INSTANCE, stateDescriptor);
     }

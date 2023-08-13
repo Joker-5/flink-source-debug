@@ -32,6 +32,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
+// 存储 OperatorState 中 BroadcastState 的元信息
 public class RegisteredBroadcastStateBackendMetaInfo<K, V> extends RegisteredStateMetaInfoBase {
 
     /** The mode how elements in this state are assigned to tasks during restore. */

@@ -36,6 +36,7 @@ import java.util.Map;
  *
  * @param <S> Type of the state.
  */
+// 存储 OperatorState 中 ListState 的元信息
 public class RegisteredOperatorStateBackendMetaInfo<S> extends RegisteredStateMetaInfoBase {
 
     /** The mode how elements in this state are assigned to tasks during restore */

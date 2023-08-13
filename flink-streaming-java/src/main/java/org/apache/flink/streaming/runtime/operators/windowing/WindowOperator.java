@@ -735,6 +735,7 @@ public class WindowOperator<K, IN, ACC, OUT, W extends Window>
         @Override
         protected <S extends State> S getPartitionedState(StateDescriptor<S, ?> stateDescriptor)
                 throws Exception {
+            // 将窗口作为 namespace
             return keyedStateBackend.getPartitionedState(window, windowSerializer, stateDescriptor);
         }
     }

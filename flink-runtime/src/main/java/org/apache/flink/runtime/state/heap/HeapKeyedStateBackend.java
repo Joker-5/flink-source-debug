@@ -76,6 +76,7 @@ public class HeapKeyedStateBackend<K> extends AbstractKeyedStateBackend<K> {
 
     private static final Logger LOG = LoggerFactory.getLogger(HeapKeyedStateBackend.class);
 
+    // 维护状态创建方法的工厂
     private static final Map<StateDescriptor.Type, StateCreateFactory> STATE_CREATE_FACTORIES =
             Stream.of(
                             Tuple2.of(
@@ -95,6 +96,7 @@ public class HeapKeyedStateBackend<K> extends AbstractKeyedStateBackend<K> {
                                     (StateCreateFactory) HeapReducingState::create))
                     .collect(Collectors.toMap(t -> t.f0, t -> t.f1));
 
+    // 维护状态更新方法的工厂
     private static final Map<StateDescriptor.Type, StateUpdateFactory> STATE_UPDATE_FACTORIES =
             Stream.of(
                             Tuple2.of(
@@ -316,12 +318,14 @@ public class HeapKeyedStateBackend<K> extends AbstractKeyedStateBackend<K> {
 
     @Override
     @Nonnull
+    // 创建或更新 state
     public <N, SV, SEV, S extends State, IS extends S> IS createOrUpdateInternalState(
             @Nonnull TypeSerializer<N> namespaceSerializer,
             @Nonnull StateDescriptor<S, SV> stateDesc,
             @Nonnull StateSnapshotTransformFactory<SEV> snapshotTransformFactory,
             boolean allowFutureMetadataUpdates)
             throws Exception {
+        // 获取 StateTable
         StateTable<K, N, SV> stateTable =
                 tryRegisterStateTable(
                         namespaceSerializer,
@@ -336,6 +340,7 @@ public class HeapKeyedStateBackend<K> extends AbstractKeyedStateBackend<K> {
             if (stateCreateFactory == null) {
                 throw new FlinkRuntimeException(stateNotSupportedMessage(stateDesc));
             }
+            // 通过 StateCreateFactory 创建状态
             createdState =
                     stateCreateFactory.createState(stateDesc, stateTable, getKeySerializer());
         } else {
@@ -343,6 +348,7 @@ public class HeapKeyedStateBackend<K> extends AbstractKeyedStateBackend<K> {
             if (stateUpdateFactory == null) {
                 throw new FlinkRuntimeException(stateNotSupportedMessage(stateDesc));
             }
+            // 通过 StateUpdateFactory 更新状态
             createdState = stateUpdateFactory.updateState(stateDesc, stateTable, createdState);
         }
 

@@ -34,9 +34,11 @@ import org.apache.flink.util.Preconditions;
  * @param <N> The type of the namespace.
  * @param <SV> The type of the values in the state.
  */
+// 基于堆内存的 state 的抽象父类
 public abstract class AbstractHeapState<K, N, SV> implements InternalKvState<K, N, SV> {
 
     /** Map containing the actual key/value pairs. */
+    // 每个基于堆内存的 State，底层实际上就是一个 StateTable
     protected final StateTable<K, N, SV> stateTable;
 
     /** The current namespace, which the access methods will refer to. */

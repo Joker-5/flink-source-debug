@@ -112,6 +112,7 @@ public interface StateBackend extends java.io.Serializable {
      * @throws Exception This method may forward all exceptions that occur while instantiating the
      *     backend.
      */
+    // 创建 KeyedStateBackend，负责 keyed state 的存储和 cp
     <K> CheckpointableKeyedStateBackend<K> createKeyedStateBackend(
             Environment env,
             JobID jobID,
@@ -174,6 +175,7 @@ public interface StateBackend extends java.io.Serializable {
      * @throws Exception This method may forward all exceptions that occur while instantiating the
      *     backend.
      */
+    // 创建 OperatorStateBackend，负责 operator state 的存储和 cp
     OperatorStateBackend createOperatorStateBackend(
             Environment env,
             String operatorIdentifier,
