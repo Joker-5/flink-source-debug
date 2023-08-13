@@ -329,6 +329,7 @@ public class TaskSlotTableImpl<T extends TaskSlotPayload> implements TaskSlotTab
         taskSlots.put(index, taskSlot);
 
         // update the allocation id to task slot map
+        // 分配成功，进行记录
         allocatedSlots.put(allocationId, taskSlot);
 
         // register a timeout for this slot since it's in state allocated
@@ -418,6 +419,7 @@ public class TaskSlotTableImpl<T extends TaskSlotPayload> implements TaskSlotTab
     }
 
     @Override
+    // 释放 slot 资源
     public int freeSlot(AllocationID allocationId, Throwable cause) throws SlotNotFoundException {
         checkStarted();
 

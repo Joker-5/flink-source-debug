@@ -282,6 +282,7 @@ public class TaskManagerServices {
      * @return task manager components
      * @throws Exception
      */
+    // 初始化 TM 相关服务
     public static TaskManagerServices fromConfiguration(
             TaskManagerServicesConfiguration taskManagerServicesConfiguration,
             PermanentBlobService permanentBlobService,
@@ -294,12 +295,15 @@ public class TaskManagerServices {
         // pre-start checks
         checkTempDirs(taskManagerServicesConfiguration.getTmpDirPaths());
 
+        // 创建 TaskEventDispatcher
         final TaskEventDispatcher taskEventDispatcher = new TaskEventDispatcher();
 
         // start the I/O manager, it will create some temp directories.
+        // 创建 IO 管理器
         final IOManager ioManager =
                 new IOManagerAsync(taskManagerServicesConfiguration.getTmpDirPaths());
 
+        // 创建 ShuffleEnvironment，默认是 org.apache.flink.runtime.io.network.NettyShuffleServiceFactory
         final ShuffleEnvironment<?, ?> shuffleEnvironment =
                 createShuffleEnvironment(
                         taskManagerServicesConfiguration,
@@ -308,10 +312,12 @@ public class TaskManagerServices {
                         ioExecutor);
         final int listeningDataPort = shuffleEnvironment.start();
 
+        // 创建 KvStateService 并启动
         final KvStateService kvStateService =
                 KvStateService.fromConfiguration(taskManagerServicesConfiguration);
         kvStateService.start();
 
+        // 初始化 UnresolvedTaskManagerLocation，记录 connection 信息
         final UnresolvedTaskManagerLocation unresolvedTaskManagerLocation =
                 new UnresolvedTaskManagerLocation(
                         taskManagerServicesConfiguration.getResourceID(),
@@ -323,8 +329,10 @@ public class TaskManagerServices {
                                 : listeningDataPort,
                         taskManagerServicesConfiguration.getNodeId());
 
+        // 初始化 BroadcastVariableManager
         final BroadcastVariableManager broadcastVariableManager = new BroadcastVariableManager();
 
+        // 维护 slot 相关列表
         final TaskSlotTable<Task> taskSlotTable =
                 createTaskSlotTable(
                         taskManagerServicesConfiguration.getNumberOfSlots(),
@@ -333,13 +341,16 @@ public class TaskManagerServices {
                         taskManagerServicesConfiguration.getPageSize(),
                         ioExecutor);
 
+        // 维护 jobId 和 JM connection 之间的关系
         final JobTable jobTable = DefaultJobTable.create();
 
+        // 监控注册的 job 的 JM leader 信息
         final JobLeaderService jobLeaderService =
                 new DefaultJobLeaderService(
                         unresolvedTaskManagerLocation,
                         taskManagerServicesConfiguration.getRetryingRegistrationConfiguration());
 
+        // 创建 TaskExecutorLocalStateStoresManager，用于维护状态信息
         final TaskExecutorLocalStateStoresManager taskStateManager =
                 new TaskExecutorLocalStateStoresManager(
                         taskManagerServicesConfiguration.isLocalRecoveryEnabled(),
@@ -381,6 +392,7 @@ public class TaskManagerServices {
                     NoOpSlotAllocationSnapshotPersistenceService.INSTANCE;
         }
 
+        // 将上面初始化的服务封装到 TaskManagerServices 对象中
         return new TaskManagerServices(
                 unresolvedTaskManagerLocation,
                 taskManagerServicesConfiguration.getManagedMemorySize().getBytes(),
@@ -407,6 +419,7 @@ public class TaskManagerServices {
             final long timerServiceShutdownTimeout,
             final int pageSize,
             final Executor memoryVerificationExecutor) {
+        // 注册一个超时服务（Akka 超时设置），用于监控功能 slot 分配是否超时
         final TimerService<AllocationID> timerService =
                 new DefaultTimerService<>(
                         new ScheduledThreadPoolExecutor(1), timerServiceShutdownTimeout);

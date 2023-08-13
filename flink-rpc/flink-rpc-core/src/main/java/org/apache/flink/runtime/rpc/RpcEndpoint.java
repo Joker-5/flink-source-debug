@@ -195,6 +195,7 @@ public abstract class RpcEndpoint implements RpcGateway, AutoCloseableAsync {
     public final void internalCallOnStart() throws Exception {
         validateRunsInMainThread();
         isRunning = true;
+        // 执行真正的启动方法
         onStart();
     }
 

@@ -170,6 +170,7 @@ public class TaskManagerRunner implements FatalErrorHandler {
         this.pluginManager = checkNotNull(pluginManager);
         this.taskExecutorServiceFactory = checkNotNull(taskExecutorServiceFactory);
 
+        // Akka 超时配置
         timeout = Time.fromDuration(configuration.get(AkkaOptions.ASK_TIMEOUT_DURATION));
 
         this.terminationFuture = new CompletableFuture<>();
@@ -191,6 +192,7 @@ public class TaskManagerRunner implements FatalErrorHandler {
                             Hardware.getNumberCPUCores(),
                             new ExecutorThreadFactory("taskmanager-future"));
 
+            // HA 相关配置，初始化服务
             highAvailabilityServices =
                     HighAvailabilityServicesUtils.createHighAvailabilityServices(
                             configuration,
@@ -201,6 +203,7 @@ public class TaskManagerRunner implements FatalErrorHandler {
 
             JMXService.startInstance(configuration.getString(JMXServerOptions.JMX_SERVER_PORT));
 
+            // 创建 RPC 服务
             rpcService = createRpcService(configuration, highAvailabilityServices, rpcSystem);
 
             this.resourceId =
@@ -213,9 +216,11 @@ public class TaskManagerRunner implements FatalErrorHandler {
 
             LOG.info("Using working directory: {}", workingDirectory);
 
+            // 创建心跳连接服务
             HeartbeatServices heartbeatServices =
                     HeartbeatServices.fromConfiguration(configuration);
 
+            // 创建 metrics 相关服务
             metricRegistry =
                     new MetricRegistryImpl(
                             MetricRegistryConfiguration.fromConfiguration(
@@ -223,6 +228,7 @@ public class TaskManagerRunner implements FatalErrorHandler {
                                     rpcSystem.getMaximumMessageSizeInBytes(configuration)),
                             ReporterSetup.fromConfiguration(configuration, pluginManager));
 
+            // 启动 metrics 服务
             final RpcService metricQueryServiceRpcService =
                     MetricUtils.startRemoteMetricsRpcService(
                             configuration,
@@ -231,6 +237,7 @@ public class TaskManagerRunner implements FatalErrorHandler {
                             rpcSystem);
             metricRegistry.startQueryService(metricQueryServiceRpcService, resourceId.unwrap());
 
+            // 创建 blob 服务
             blobCacheService =
                     BlobUtils.createBlobCacheService(
                             configuration,
@@ -245,6 +252,7 @@ public class TaskManagerRunner implements FatalErrorHandler {
             final DelegationTokenReceiverRepository delegationTokenReceiverRepository =
                     new DelegationTokenReceiverRepository(configuration, pluginManager);
 
+            // 创建 TaskExecutor
             taskExecutorService =
                     taskExecutorServiceFactory.createTaskExecutor(
                             this.configuration,
@@ -262,6 +270,7 @@ public class TaskManagerRunner implements FatalErrorHandler {
 
             handleUnexpectedTaskExecutorServiceTermination();
 
+            // 周期性地输出内存相关的日志信息，直到 terminationFuture complete
             MemoryLogger.startIfConfigured(
                     LOG, configuration, terminationFuture.thenAccept(ignored -> {}));
         }
@@ -290,7 +299,9 @@ public class TaskManagerRunner implements FatalErrorHandler {
 
     public void start() throws Exception {
         synchronized (lock) {
+            // 初始化 TM 相关 service
             startTaskManagerRunnerServices();
+            // 启动 TaskExecutorService
             taskExecutorService.start();
         }
     }
@@ -473,16 +484,20 @@ public class TaskManagerRunner implements FatalErrorHandler {
                 args, TaskManagerRunner.class.getSimpleName());
     }
 
+    // 启动 TM
     public static int runTaskManager(Configuration configuration, PluginManager pluginManager)
             throws Exception {
         final TaskManagerRunner taskManagerRunner;
 
         try {
+            // 创建 TaskManagerRunner 对象
             taskManagerRunner =
                     new TaskManagerRunner(
                             configuration,
                             pluginManager,
+                            // 创建 TaskExecutorService
                             TaskManagerRunner::createTaskExecutorService);
+            // 启动 TaskManager 服务
             taskManagerRunner.start();
         } catch (Exception exception) {
             throw new FlinkException("Failed to start the TaskManagerRunner.", exception);
@@ -561,6 +576,7 @@ public class TaskManagerRunner implements FatalErrorHandler {
             DelegationTokenReceiverRepository delegationTokenReceiverRepository)
             throws Exception {
 
+        // 启动 TM 服务并创建 TaskExecutor 对象
         final TaskExecutor taskExecutor =
                 startTaskManager(
                         configuration,
@@ -606,6 +622,7 @@ public class TaskManagerRunner implements FatalErrorHandler {
         final TaskExecutorResourceSpec taskExecutorResourceSpec =
                 TaskExecutorResourceUtils.resourceSpecFromConfig(configuration);
 
+        // 创建 TaskManagerServicesConfiguration，维护 TM 服务相关配置
         TaskManagerServicesConfiguration taskManagerServicesConfiguration =
                 TaskManagerServicesConfiguration.fromConfiguration(
                         configuration,
@@ -615,6 +632,7 @@ public class TaskManagerRunner implements FatalErrorHandler {
                         taskExecutorResourceSpec,
                         workingDirectory);
 
+        // 初始化 TM 的 TaskManagerMetricGroup，并初始化 TM 的基本状态（CPU、内存等）监控
         Tuple2<TaskManagerMetricGroup, MetricGroup> taskManagerMetricGroup =
                 MetricUtils.instantiateTaskManagerMetricGroup(
                         metricRegistry,
@@ -627,6 +645,7 @@ public class TaskManagerRunner implements FatalErrorHandler {
                         taskManagerServicesConfiguration.getNumIoThreads(),
                         new ExecutorThreadFactory("flink-taskexecutor-io"));
 
+        // 初始化 TaskManagerServices，TM 的相关服务都在此初始化
         TaskManagerServices taskManagerServices =
                 TaskManagerServices.fromConfiguration(
                         taskManagerServicesConfiguration,
@@ -641,6 +660,7 @@ public class TaskManagerRunner implements FatalErrorHandler {
                 taskManagerServices.getTaskSlotTable(),
                 taskManagerServices::getManagedMemorySize);
 
+        // 创建 TaskManagerConfiguration，维护 TM 相关配置，主要用于 TaskExecutor 的初始化
         TaskManagerConfiguration taskManagerConfiguration =
                 TaskManagerConfiguration.fromConfiguration(
                         configuration,
@@ -650,6 +670,7 @@ public class TaskManagerRunner implements FatalErrorHandler {
 
         String metricQueryServiceAddress = metricRegistry.getMetricQueryServiceGatewayRpcAddress();
 
+        // 创建 TaskExecutor 对象
         return new TaskExecutor(
                 rpcService,
                 taskManagerConfiguration,

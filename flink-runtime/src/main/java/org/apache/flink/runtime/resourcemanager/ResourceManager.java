@@ -267,6 +267,7 @@ public abstract class ResourceManager<WorkerType extends ResourceIDRetrievable>
 
             registerMetrics();
 
+            // 启动心跳连接相关服务
             startHeartbeatServices();
 
             slotManager.start(
@@ -1226,6 +1227,7 @@ public abstract class ResourceManager<WorkerType extends ResourceIDRetrievable>
     }
 
     private void startHeartbeatServices() {
+        // 创建与 TM 的心跳连接管理器
         taskManagerHeartbeatManager =
                 heartbeatServices.createHeartbeatManagerSender(
                         resourceId,
@@ -1233,6 +1235,7 @@ public abstract class ResourceManager<WorkerType extends ResourceIDRetrievable>
                         getMainThreadExecutor(),
                         log);
 
+        // 创建与 JM 的心跳连接管理器
         jobManagerHeartbeatManager =
                 heartbeatServices.createHeartbeatManagerSender(
                         resourceId,

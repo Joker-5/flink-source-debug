@@ -185,6 +185,7 @@ class AkkaRpcActor<T extends RpcEndpoint & RpcGateway> extends AbstractActor {
 
     private void handleControlMessage(ControlMessages controlMessage) {
         try {
+            // 根据控制信息进行相应处理
             switch (controlMessage) {
                 case START:
                     state = state.start(this, flinkClassLoader);
@@ -614,11 +615,13 @@ class AkkaRpcActor<T extends RpcEndpoint & RpcGateway> extends AbstractActor {
         STOPPED;
 
         @Override
+        // 启动服务
         public State start(AkkaRpcActor<?> akkaRpcActor, ClassLoader flinkClassLoader) {
             akkaRpcActor.mainThreadValidator.enterMainThread();
 
             try {
                 runWithContextClassLoader(
+                        // 执行启动方法
                         () -> akkaRpcActor.rpcEndpoint.internalCallOnStart(), flinkClassLoader);
             } catch (Throwable throwable) {
                 akkaRpcActor.stop(

@@ -156,6 +156,7 @@ public class TaskExecutorToResourceManagerConnection
                 throws Exception {
 
             Time timeout = Time.milliseconds(timeoutMillis);
+            // 向 RM 注册 TM
             return resourceManager.registerTaskExecutor(taskExecutorRegistration, timeout);
         }
     }

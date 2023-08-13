@@ -45,6 +45,10 @@ import java.util.UUID;
  *
  * <p>Before the task slot table can be used, it must be started via the {@link #start} method.
  */
+// TaskSlotTable 主要为 task slot 服务，主要功能如下：
+// 1、维护这个 TM 上所有 TaskSlot 与 Task、及 Job 的关系；
+// 2、维护这个 TM 上所有 TaskSlot 的状态；
+// 3、TaskSlot 在进行 allocate/free 操作，通过 TimeService 做超时检测。
 public interface TaskSlotTable<T extends TaskSlotPayload>
         extends TimeoutListener<AllocationID>, AutoCloseableAsync {
     /**
