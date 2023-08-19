@@ -1128,6 +1128,7 @@ public abstract class StreamTask<OUT, OP extends StreamOperator<OUT>>
 
                         if (noUnfinishedInputGates) {
                             result.complete(
+                                    // 基于 Mailbox 线程模型异步触发 cp
                                     triggerCheckpointAsyncInMailbox(
                                             checkpointMetaData, checkpointOptions));
                         } else {
@@ -1169,6 +1170,7 @@ public abstract class StreamTask<OUT, OP extends StreamOperator<OUT>>
                     checkpointMetaData.getCheckpointId(), checkpointOptions);
 
             boolean success =
+                    // 执行 cp
                     performCheckpoint(checkpointMetaData, checkpointOptions, checkpointMetrics);
             if (!success) {
                 declineCheckpoint(checkpointMetaData.getCheckpointId());
@@ -1270,6 +1272,7 @@ public abstract class StreamTask<OUT, OP extends StreamOperator<OUT>>
         subtaskCheckpointCoordinator.abortCheckpointOnBarrier(checkpointId, cause, operatorChain);
     }
 
+    // 执行 cp
     private boolean performCheckpoint(
             CheckpointMetaData checkpointMetaData,
             CheckpointOptions checkpointOptions,

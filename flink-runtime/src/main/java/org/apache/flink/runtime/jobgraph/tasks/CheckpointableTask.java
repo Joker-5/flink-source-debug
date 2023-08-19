@@ -49,6 +49,9 @@ public interface CheckpointableTask {
      * @return future with value of {@code false} if the checkpoint was not carried out, {@code
      *     true} otherwise
      */
+    // 异步触发 cp，该方法是触发 cp 的源头，会向下游注入 CheckpointBarrier，
+    // 下游的其他任务收到 CheckpointBarrier 后会调用 triggerCheckpointOnBarrier 方法，
+    // 这两个方法的主要逻辑是一致的，只是在一些细微处有差别
     CompletableFuture<Boolean> triggerCheckpointAsync(
             CheckpointMetaData checkpointMetaData, CheckpointOptions checkpointOptions);
 

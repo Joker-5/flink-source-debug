@@ -1018,9 +1018,12 @@ public class TaskExecutor extends RpcEndpoint implements TaskExecutorGateway {
                 checkpointTimestamp,
                 executionAttemptID);
 
+        // 因为一个 TaskExecutor 中可能会有多个 Task 在运行，
+        // 所以需要根据 ExecutionAttemptID 找到对应的 Task
         final Task task = taskSlotTable.getTask(executionAttemptID);
 
         if (task != null) {
+            // 触发 cp 的核心方法
             task.triggerCheckpointBarrier(checkpointId, checkpointTimestamp, checkpointOptions);
 
             return CompletableFuture.completedFuture(Acknowledge.get());

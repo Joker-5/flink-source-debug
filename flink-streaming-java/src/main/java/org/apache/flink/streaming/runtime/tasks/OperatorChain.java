@@ -339,6 +339,7 @@ public abstract class OperatorChain<OUT, OP extends StreamOperator<OUT>>
         broadcastEvent(event, false);
     }
 
+    // 向下游广播事件
     public void broadcastEvent(AbstractEvent event, boolean isPriorityEvent) throws IOException {
         for (RecordWriterOutput<?> streamOutput : streamOutputs) {
             streamOutput.broadcastEvent(event, isPriorityEvent);

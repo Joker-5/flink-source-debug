@@ -327,8 +327,10 @@ class SubtaskCheckpointCoordinatorImpl implements SubtaskCheckpointCoordinator {
                 System.currentTimeMillis(),
                 metadata.getTimestamp(),
                 System.currentTimeMillis() - metadata.getTimestamp());
+        // 创建一个 CheckpointBarrier
         CheckpointBarrier checkpointBarrier =
                 new CheckpointBarrier(metadata.getCheckpointId(), metadata.getTimestamp(), options);
+        // 向下游广播 CheckpointBarrier
         operatorChain.broadcastEvent(checkpointBarrier, options.isUnalignedCheckpoint());
 
         // Step (3): Register alignment timer to timeout aligned barrier to unaligned barrier

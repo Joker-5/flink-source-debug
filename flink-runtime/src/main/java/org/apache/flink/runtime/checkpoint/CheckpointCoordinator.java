@@ -563,6 +563,7 @@ public class CheckpointCoordinator {
 
         CheckpointTriggerRequest request =
                 new CheckpointTriggerRequest(props, externalSavepointLocation, isPeriodic);
+        // 触发 cp 的核心逻辑
         chooseRequestToExecute(request).ifPresent(this::startTriggeringCheckpoint);
         return request.onCompletionPromise;
     }
@@ -595,6 +596,7 @@ public class CheckpointCoordinator {
                                             // this must happen outside the coordinator-wide lock,
                                             // because it communicates with external services
                                             // (in HA mode) and may block for a while.
+                                            // 生成本次 cp 的 checkpointID（严格自增）
                                             long checkpointID =
                                                     checkpointIdCounter.getAndIncrement();
                                             return new Tuple2<>(plan, checkpointID);
@@ -605,6 +607,7 @@ public class CheckpointCoordinator {
                                     executor)
                             .thenApplyAsync(
                                     (checkpointInfo) ->
+                                            // 创建 PendingCheckpoint，PendingCheckpoint 表示一个处于中间状态的 cp
                                             createPendingCheckpoint(
                                                     timestamp,
                                                     request.props,
@@ -620,6 +623,8 @@ public class CheckpointCoordinator {
                             .thenApplyAsync(
                                     pendingCheckpoint -> {
                                         try {
+                                            // 初始化 CheckpointStorageLocation，
+                                            // CheckpointStorageLocation 是此次 cp 存储位置的抽象
                                             CheckpointStorageLocation checkpointStorageLocation =
                                                     initializeCheckpointLocation(
                                                             pendingCheckpoint.getCheckpointID(),
@@ -701,6 +706,7 @@ public class CheckpointCoordinator {
                                                 onTriggerFailure(checkpoint, throwable);
                                             }
                                         } else {
+                                            // 触发 cp
                                             triggerCheckpointRequest(
                                                     request, timestamp, checkpoint);
                                         }
@@ -799,6 +805,7 @@ public class CheckpointCoordinator {
                         execution.triggerSynchronousSavepoint(
                                 checkpointId, timestamp, checkpointOptions));
             } else {
+                // 触发 cp
                 acks.add(execution.triggerCheckpoint(checkpointId, timestamp, checkpointOptions));
             }
         }
@@ -2029,6 +2036,7 @@ public class CheckpointCoordinator {
     }
 
     private ScheduledFuture<?> scheduleTriggerWithDelay(long initDelay) {
+        // 每隔固定时间触发 ScheduledTrigger 中的逻辑
         return timer.scheduleAtFixedRate(
                 new ScheduledTrigger(), initDelay, baseInterval, TimeUnit.MILLISECONDS);
     }
@@ -2084,6 +2092,7 @@ public class CheckpointCoordinator {
         @Override
         public void run() {
             try {
+                // 触发一次 cp
                 triggerCheckpoint(checkpointProperties, null, true);
             } catch (Exception e) {
                 LOG.error("Exception while triggering checkpoint for job {}.", job, e);

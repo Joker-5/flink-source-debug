@@ -163,6 +163,7 @@ public abstract class AbstractInvokable
     // ------------------------------------------------------------------------
 
     @Override
+    // 异步触发 cp
     public CompletableFuture<Boolean> triggerCheckpointAsync(
             CheckpointMetaData checkpointMetaData, CheckpointOptions checkpointOptions) {
         throw new UnsupportedOperationException(

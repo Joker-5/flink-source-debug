@@ -536,6 +536,7 @@ public class DefaultExecutionGraph implements ExecutionGraph, InternalExecutionG
         if (checkpointCoordinator.isPeriodicCheckpointingConfigured()) {
             // the periodic checkpoint scheduler is activated and deactivated as a result of
             // job status changes (running -> on, all other states -> off)
+            // 注册一个监听作业状态的 CheckpointCoordinatorDeActivator 对象，该对象会在作业状态发送改变时得到通知
             registerJobStatusListener(checkpointCoordinator.createActivatorDeactivator());
         }
 

@@ -61,6 +61,7 @@ import static org.apache.flink.util.Preconditions.checkState;
  */
 @Internal
 @NotThreadSafe
+// 支持 exactly once
 public class SingleCheckpointBarrierHandler extends CheckpointBarrierHandler {
 
     private static final Logger LOG = LoggerFactory.getLogger(SingleCheckpointBarrierHandler.class);

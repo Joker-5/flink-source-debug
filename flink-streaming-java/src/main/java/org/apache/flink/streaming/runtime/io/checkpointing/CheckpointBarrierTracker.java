@@ -56,6 +56,7 @@ import static org.apache.flink.util.Preconditions.checkState;
  * <p>NOTE: This implementation strictly assumes that newer checkpoints have higher checkpoint IDs.
  */
 @Internal
+// 仅支持 at least once，不支持 exactly once
 public class CheckpointBarrierTracker extends CheckpointBarrierHandler {
 
     private static final Logger LOG = LoggerFactory.getLogger(CheckpointBarrierTracker.class);
@@ -104,6 +105,7 @@ public class CheckpointBarrierTracker extends CheckpointBarrierHandler {
         // In this case we should finish the existing pending checkpoint.
         if (receivedBarrier.getId() > latestPendingCheckpointID && numOpenChannels == 1) {
             markAlignmentStartAndEnd(barrierId, receivedBarrier.getTimestamp());
+            // 通知进行 cp
             notifyCheckpoint(receivedBarrier);
             return;
         }
@@ -128,16 +130,20 @@ public class CheckpointBarrierTracker extends CheckpointBarrierHandler {
         if (barrierCount != null) {
             // add one to the count to that barrier and check for completion
             int numChannelsNew = barrierCount.markChannelAligned(channelInfo);
+            // CheckpointBarrierTracker 仅追踪从每一个 input channel 接收到的 barrier，
+            // 当所有 input channel 的 barrier 都被接收时，就可以触发 cp 了
             if (numChannelsNew == barrierCount.getTargetChannelCount()) {
                 // checkpoint can be triggered (or is aborted and all barriers have been seen)
                 // first, remove this checkpoint and all all prior pending
                 // checkpoints (which are now subsumed)
+                // 丢弃当前 barrierId 之前所有未完成的 cp
                 for (int i = 0; i <= pos; i++) {
                     pendingCheckpoints.pollFirst();
                 }
 
                 // notify the listener
                 if (!barrierCount.isAborted()) {
+                    // 触发 cp
                     triggerCheckpointOnAligned(barrierCount);
                 }
             }
@@ -298,6 +304,7 @@ public class CheckpointBarrierTracker extends CheckpointBarrierHandler {
         checkState(
                 barrierCount.getPendingCheckpoint() != null,
                 "Pending checkpoint barrier must" + "exists for non-aborted checkpoints.");
+        // 通知进行 cp
         notifyCheckpoint(barrierCount.getPendingCheckpoint());
     }
 

@@ -1331,6 +1331,7 @@ public class Task
             checkState(invokable instanceof CheckpointableTask, "invokable is not checkpointable");
             try {
                 ((CheckpointableTask) invokable)
+                        // 异步触发 cp，只有作为 source 的 Task 才会触发
                         .triggerCheckpointAsync(checkpointMetaData, checkpointOptions)
                         .handle(
                                 (triggerResult, exception) -> {
